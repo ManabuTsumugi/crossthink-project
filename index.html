@@ -294,6 +294,19 @@
             left: 0;
         }
 
+        /* 合意検知関連のスタイル */
+        .agreement-notification {
+            background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
+            border-left: 5px solid #ec4899;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
         @media (max-width: 768px) {
             .config-grid {
                 grid-template-columns: 1fr;
@@ -389,6 +402,68 @@
     </div>
 
     <script>
+        // 合意検知システムクラス
+        class AgreementDetector {
+            constructor() {
+                this.patterns = {
+                    surface: [
+                        /なるほど.*ですね/i,
+                        /その通り/i,
+                        /理解.*ました/i,
+                        /同感です/i,
+                        /おっしゃる通り/i,
+                        /確かに.*そうですね/i
+                    ],
+                    deep: [
+                        /根本的に.*同意/i,
+                        /本質的に.*理解/i,
+                        /完全に.*合意/i,
+                        /深く.*共感/i,
+                        /心から.*同意/i,
+                        /本当に.*その通り/i
+                    ],
+                    creative: [
+                        /新しい.*視点.*生まれ/i,
+                        /美しい.*結論/i,
+                        /統合.*された/i,
+                        /より高い.*次元/i,
+                        /結実.*しました/i,
+                        /素晴らしい.*洞察/i,
+                        /画期的.*アイデア/i
+                    ]
+                };
+                
+                this.stopTriggers = [
+                    /議論.*終了/i,
+                    /合意.*達し/i,
+                    /結論.*出ました/i,
+                    /対話.*完成/i,
+                    /これで.*十分/i,
+                    /美しく.*完成/i
+                ];
+            }
+            
+            detect(message) {
+                // 即座停止チェック
+                for (let trigger of this.stopTriggers) {
+                    if (trigger.test(message)) {
+                        return 'stop';
+                    }
+                }
+                
+                // 合意レベルチェック
+                for (let level in this.patterns) {
+                    for (let pattern of this.patterns[level]) {
+                        if (pattern.test(message)) {
+                            return level;
+                        }
+                    }
+                }
+                
+                return null;
+            }
+        }
+
         class AIDialogueSystem {
             constructor() {
                 this.isRunning = false;
@@ -396,8 +471,9 @@
                 this.openaiCount = 0;
                 this.geminiCount = 0;
                 this.startTime = null;
-                this.currentSpeaker = 'openai'; // 最初はOpenAIから開始
+                this.currentSpeaker = 'openai';
                 this.conversationHistory = [];
+                this.agreementDetector = new AgreementDetector(); // 合意検知器を初期化
                 
                 this.initializeElements();
                 this.bindEvents();
@@ -433,6 +509,8 @@
                 this.addMessage('system', 
                     'Crossthink AI自律対話システムへようこそ！\n' +
                     'このデモでは、ChatGPTとGeminiが自律的に知的対話を行います。\n\n' +
+                    '✨ 新機能：合意形成自動検知システム搭載\n' +
+                    '🎯 対話の自然な終了点を検知します\n\n' +
                     'マネタイズポイント:\n' +
                     '📈 高品質な思考ログの自動生成\n' +
                     '🎓 教育コンテンツの大量作成\n' +
@@ -454,12 +532,9 @@
                 this.hideError();
 
                 const topic = this.elements.topicInput.value;
-                this.addMessage('system', `対話トピック: "${topic}" で自律対話を開始します。`);
+                this.addMessage('system', `対話トピック: "${topic}" で自律対話を開始します。\n✨ 合意形成検知システム稼働中`);
 
-                // タイマー開始
                 this.startTimer();
-
-                // 最初のメッセージをOpenAIから開始
                 await this.sendMessage('openai', `${topic}について、Geminiと深い対話をしてください。最初にあなたの見解を述べて、Geminiに質問を投げかけてください。`);
             }
 
@@ -501,30 +576,108 @@
                         this.geminiCount++;
                     }
 
-                    // "思考中..."メッセージを削除
                     this.removeLastMessage();
-
-                    // 実際の応答を表示
                     this.addMessage(provider, response);
                     this.conversationHistory.push({ provider, message: response });
-
-                    // 統計更新
                     this.updateStats();
 
+                    // 🎯 合意検知システム実行
+                    const agreementLevel = this.agreementDetector.detect(response);
+                    if (agreementLevel) {
+                        setTimeout(() => {
+                            this.handleAgreement(agreementLevel);
+                        }, 2000);
+                        return; // 合意検知時は次のメッセージ送信を停止
+                    }
+
                     // 次のAIに応答させる
-                    if (this.isRunning){ //messageCount制限を削除
+                    if (this.isRunning) {
                         setTimeout(() => {
                             const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
                             const nextPrompt = this.generateNextPrompt(nextProvider, response);
                             this.sendMessage(nextProvider, nextPrompt);
-                        }, 2000); // 2秒待機
+                        }, 2000);
                     }
 
                 } catch (error) {
-                    this.removeLastMessage(); // "思考中..."を削除
+                    this.removeLastMessage();
                     this.showError(`エラーが発生しました: ${error.message}`);
                     console.error('API Error:', error);
                 }
+            }
+
+            // 🌟 合意検知処理メソッド
+            handleAgreement(level) {
+                if (level === 'stop') {
+                    this.executeGracefulStop();
+                } else {
+                    this.confirmAgreement(level);
+                }
+            }
+
+            confirmAgreement(level) {
+                const confirmations = {
+                    surface: "🤔 この点で合意できているようですが、他の角度からも検討してみますか？",
+                    deep: "🎯 根本的な理解で一致しているようですね。この方向で議論を深めますか？",
+                    creative: "✨ 新しい統合的な視点が生まれたようです。この美しい発見で対話を完成させますか？"
+                };
+                
+                const message = `🔍 合意検知システム稼働\n\n${confirmations[level]}\n\n（3秒後に自動継続します）`;
+                this.addSpecialMessage('agreement', message);
+                
+                // 3秒後に自動継続
+                setTimeout(() => {
+                    if (this.isRunning) {
+                        const currentProvider = this.conversationHistory[this.conversationHistory.length - 1].provider;
+                        const nextProvider = currentProvider === 'openai' ? 'gemini' : 'openai';
+                        const nextPrompt = this.generateNextPrompt(nextProvider, confirmations[level]);
+                        this.sendMessage(nextProvider, nextPrompt);
+                    }
+                }, 3000);
+            }
+
+            executeGracefulStop() {
+                this.isRunning = false;
+                const topic = this.elements.topicInput.value;
+                const finalMessage = `
+✨ この対話を通じて、美しい思考の星座が浮かび上がりました。
+
+🌟 「${topic}」について私たちが共に辿った知的な軌跡:
+- 深い洞察の共有
+- 異なる視点の統合  
+- 創造的な理解の結晶化
+
+💎 この探求で得られた価値:
+知的対話における人工知能同士の協調と、新たな理解の創発
+
+🚀 Crossthink対話システム - 美しい自然終了
+対話は合意形成により自動完了いたしました。
+
+未来への示唆: この対話ログは、AI時代の知的協働の可能性を示す貴重な記録となりました。
+        `;
+                
+                this.addSpecialMessage('agreement', finalMessage);
+                this.elements.startBtn.disabled = false;
+                this.elements.stopBtn.disabled = true;
+            }
+
+            addSpecialMessage(type, content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}-notification`;
+
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('ja-JP');
+
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        🎭 Crossthink合意検知システム
+                        <span class="message-time">${timeStr}</span>
+                    </div>
+                    <div>${content.replace(/\n/g, '<br>')}</div>
+                `;
+
+                this.elements.chatContainer.appendChild(messageDiv);
+                this.elements.chatContainer.scrollTop = this.elements.chatContainer.scrollHeight;
             }
 
             async callOpenAI(prompt) {
@@ -554,7 +707,6 @@
             async callGemini(prompt) {
                 const apiKey = this.elements.geminiKey.value.trim();
                 
-                // 複数のエンドポイントを試行
                 const endpoints = [
                     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
                     `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
@@ -610,7 +762,6 @@
                             console.log(`Endpoint ${i + 1} failed:`, errorText);
                             
                             if (i === endpoints.length - 1) {
-                                // 最後のエンドポイントも失敗した場合、代替応答を返す
                                 return this.generateFallbackResponse(prompt);
                             }
                         }
@@ -618,7 +769,6 @@
                         console.log(`Endpoint ${i + 1} error:`, error);
                         
                         if (i === endpoints.length - 1) {
-                            // 最後のエンドポイントも失敗した場合、代替応答を返す
                             return this.generateFallbackResponse(prompt);
                         }
                     }
@@ -626,7 +776,6 @@
             }
 
             generateFallbackResponse(prompt) {
-                // Gemini APIが失敗した場合の代替応答
                 const responses = [
                     "興味深い観点ですね。私は Google の AI として、データに基づいた分析を重視します。あなたが提起された点について、より具体的なデータや事例があれば、さらに深い議論ができると思います。どのような実証的な根拠をお持ちでしょうか？",
                     
