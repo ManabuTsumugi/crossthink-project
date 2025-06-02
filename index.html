@@ -1,4 +1,27 @@
-<!DOCTYPE html>
+showWelcomeMessage() {
+                this.addMessage('system', 
+                    'Crossthink AI自律対話システム 統合版へようこそ！\n\n' +
+                    '🎛️ 選択可能な対話モード:\n' +
+                    '🤖 自動対話モード: AI同士の自律的な対話（改良版v2.0）\n' +
+                    '🎭 手動制御モード: 司会者・発言者を手動で切り替え\n\n' +
+                    '🔄 自動モード特徴:\n' +
+                    '🎨 ChatGPT: 創造性・発想力重視（温度0.8）\n' +
+                    '🧠 Gemini: 論理性・分析力重視（温度0.7）\n' +
+                    '• 最大22メッセージまで対話\n' +
+                    '• 3段階システム介入（6・12・20回目）\n' +
+                    '• 要約プロンプト自動生成\n\n' +
+                    '🎭 手動モード特徴:\n' +
+                    '📋 司会者モード: 論点整理・方向性提示\n' +
+                    '💬 発言者モード: 具体的アイデア・創造的提案\n' +
+                    '• 任意のタイミングで役割切り替え\n' +
+                    '• ChatGPT/Gemini選択可能\n\n' +
+                    '🎯 マネタイズポイント:\n' +
+                    '📈 高品質な思考ログの自動生成\n' +
+                    '🎓 教育コンテンツの大量作成\n' +
+                    '💡 企業向けアイデア創出サービス\n' +
+                    '🔬 研究用データセット提供'
+                );
+            }<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -81,13 +104,49 @@
             border-color: #667eea;
         }
 
-        .topic-section {
-            margin-bottom: 20px;
+        .mode-selector {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
         }
 
-        .topic-section h2 {
+        .mode-selector h3 {
             margin-bottom: 15px;
             color: #555;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-mode {
+            padding: 12px 24px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            background: white;
+            color: #666;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-mode.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .manual-controls {
+            margin: 20px 0;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 2px dashed #667eea;
         }
 
         .topic-input {
@@ -423,14 +482,18 @@
                 this.openaiCount = 0;
                 this.geminiCount = 0;
                 this.startTime = null;
+                this.currentSpeaker = 'openai';
+                this.conversationHistory = [];
+                this.maxMessages = 22;
+                this.interventionPoints = [6, 12, 20];
+                
+                // 手動制御用の新しいプロパティ
+                this.isManualMode = false;
                 this.currentMode = 'speaker'; // 'moderator' or 'speaker'
                 this.currentProvider = 'chatgpt'; // 'chatgpt' or 'gemini'
-                this.conversationHistory = [];
-                this.intervalId = null;
                 
                 this.initializeElements();
                 this.bindEvents();
-                this.updateUI();
                 this.showWelcomeMessage();
             }
 
@@ -442,11 +505,16 @@
                     startBtn: document.getElementById('startBtn'),
                     stopBtn: document.getElementById('stopBtn'),
                     clearBtn: document.getElementById('clearBtn'),
+                    exportBtn: document.getElementById('exportBtn'),
+                    autoModeBtn: document.getElementById('autoModeBtn'),
+                    manualModeBtn: document.getElementById('manualModeBtn'),
+                    manualControls: document.getElementById('manualControls'),
                     moderatorBtn: document.getElementById('moderatorBtn'),
                     speakerBtn: document.getElementById('speakerBtn'),
                     nextSpeaker: document.getElementById('nextSpeaker'),
                     chatContainer: document.getElementById('chatContainer'),
                     errorDisplay: document.getElementById('errorDisplay'),
+                    warningDisplay: document.getElementById('warningDisplay'),
                     totalMessages: document.getElementById('totalMessages'),
                     openaiMessages: document.getElementById('openaiMessages'),
                     geminiMessages: document.getElementById('geminiMessages'),
@@ -460,9 +528,31 @@
                 this.elements.startBtn.addEventListener('click', () => this.startDialogue());
                 this.elements.stopBtn.addEventListener('click', () => this.stopDialogue());
                 this.elements.clearBtn.addEventListener('click', () => this.clearChat());
+                this.elements.exportBtn.addEventListener('click', () => this.generateSummaryPrompt());
+                
+                // モード切り替え
+                this.elements.autoModeBtn.addEventListener('click', () => this.setAutoMode());
+                this.elements.manualModeBtn.addEventListener('click', () => this.setManualMode());
+                
+                // 手動制御
                 this.elements.moderatorBtn.addEventListener('click', () => this.setModeratorMode());
                 this.elements.speakerBtn.addEventListener('click', () => this.setSpeakerMode());
                 this.elements.nextSpeaker.addEventListener('change', () => this.updateProvider());
+            }
+
+            setAutoMode() {
+                this.isManualMode = false;
+                this.elements.autoModeBtn.classList.add('active');
+                this.elements.manualModeBtn.classList.remove('active');
+                this.elements.manualControls.style.display = 'none';
+            }
+
+            setManualMode() {
+                this.isManualMode = true;
+                this.elements.manualModeBtn.classList.add('active');
+                this.elements.autoModeBtn.classList.remove('active');
+                this.elements.manualControls.style.display = 'block';
+                this.updateUI();
             }
 
             setModeratorMode() {
@@ -483,6 +573,8 @@
             }
 
             updateUI() {
+                if (!this.isManualMode) return;
+                
                 // 役割ボタンの状態更新
                 this.elements.moderatorBtn.classList.toggle('active', this.currentMode === 'moderator');
                 this.elements.speakerBtn.classList.toggle('active', this.currentMode === 'speaker');
@@ -530,19 +622,36 @@
                 this.elements.startBtn.disabled = true;
                 this.elements.stopBtn.disabled = false;
                 this.hideError();
+                this.hideWarning();
 
-                const topic = this.elements.topicInput.value;
-                this.addMessage('system', `対話トピック: "${topic}" で対話を開始します。\n現在のモード: ${this.currentMode === 'moderator' ? '司会者' : '発言者'}`);
+                const topic = this.elements.topicInput.value.trim();
+                
+                if (this.isManualMode) {
+                    // 手動モードの場合
+                    this.addMessage('system', `🎭 手動制御モードで対話を開始します。\nトピック: "${topic}"\n現在のモード: ${this.currentMode === 'moderator' ? '司会者' : '発言者'}`);
+                    this.startTimer();
+                    
+                    const prompt = this.generateManualPrompt(topic);
+                    await this.sendManualMessage(this.currentProvider, prompt);
+                } else {
+                    // 自動モードの場合（元のロジック）
+                    this.currentSpeaker = 'openai';
+                    this.addMessage('system', `🤖 自動対話モードで対話を開始します。\nトピック: "${topic}"\n🚀 役割逆転実験を開始します！`);
+                    this.startTimer();
 
-                // タイマー開始
-                this.startTimer();
+                    await this.sendMessage('openai', `あなたは創造性と発想力を重視する研究者です。「${topic}」について、大胆で革新的な視点から議論を始めてください。
 
-                // 最初のメッセージを現在の設定で送信
-                const prompt = this.generatePrompt(topic);
-                await this.sendMessage(this.currentProvider, prompt);
+🎨 重要ポイント:
+- 斬新なアイデアや発想を積極的に提示
+- 既存の枠組みにとらわれない視点
+- 直感的・感覚的な洞察も重視
+- 相手に刺激的な問いかけを投げかける
+
+まず、あなたの創造的な見解を述べて、Geminiに挑発的な質問をしてください。`);
+                }
             }
 
-            generatePrompt(topic, isFollowUp = false) {
+            generateManualPrompt(topic, isFollowUp = false) {
                 if (this.currentMode === 'moderator') {
                     if (isFollowUp) {
                         return `【司会者として】これまでの議論を整理し、「${topic}」について新しい論点や視点を提示してください。議論をさらに深めるための方向性を示してください。`;
@@ -559,11 +668,10 @@
                 }
             }
 
-            async sendMessage(provider, prompt) {
+            async sendManualMessage(provider, prompt) {
                 if (!this.isRunning) return;
 
                 try {
-                    // 現在の役割を表示に反映
                     const roleText = this.currentMode === 'moderator' ? ' [司会者]' : ' [発言者]';
                     this.addMessage(provider, '思考中...' + roleText, true);
                     
@@ -576,39 +684,32 @@
                         this.geminiCount++;
                     }
 
-                    // "思考中..."メッセージを削除
                     this.removeLastMessage();
 
-                    // 実際の応答を表示（役割情報付き）
                     const rolePrefix = this.currentMode === 'moderator' ? '【司会者】' : '【発言者】';
                     this.addMessage(provider, rolePrefix + response);
                     this.conversationHistory.push({ provider, message: response, mode: this.currentMode });
 
-                    // 統計更新
                     this.updateStats();
-
-                    // 次の発言ボタンを表示
                     this.addContinueButton();
 
                 } catch (error) {
-                    this.removeLastMessage(); // "思考中..."を削除
+                    this.removeLastMessage();
                     this.showError(`エラーが発生しました: ${error.message}`);
                     console.error('API Error:', error);
                 }
             }
 
-            // 手動で次の発言を送信するメソッド
             async sendNextMessage() {
                 if (!this.isRunning) return;
 
                 const topic = this.elements.topicInput.value;
-                const prompt = this.generatePrompt(topic, true);
-                await this.sendMessage(this.currentProvider, prompt);
+                const prompt = this.generateManualPrompt(topic, true);
+                await this.sendManualMessage(this.currentProvider, prompt);
             }
 
-            // 次の発言ボタンを追加
             addContinueButton() {
-                if (this.isRunning && !document.getElementById('continueBtn')) {
+                if (this.isRunning && this.isManualMode && !document.getElementById('continueBtn')) {
                     const continueBtn = document.createElement('button');
                     continueBtn.id = 'continueBtn';
                     continueBtn.className = 'btn btn-primary';
@@ -624,6 +725,50 @@
                 const continueBtn = document.getElementById('continueBtn');
                 if (continueBtn) {
                     continueBtn.remove();
+                }
+            }
+
+            async sendMessage(provider, prompt) {
+                if (!this.isRunning || this.isManualMode) return;
+
+                try {
+                    this.addMessage(provider, '思考中...', true);
+                    
+                    let response;
+                    if (provider === 'openai') {
+                        response = await this.callOpenAI(prompt);
+                        this.openaiCount++;
+                    } else {
+                        response = await this.callGemini(prompt);
+                        this.geminiCount++;
+                    }
+
+                    this.removeLastMessage();
+                    this.addMessage(provider, response);
+                    this.conversationHistory.push({ provider, message: response });
+                    this.updateStats();
+
+                    // システム介入チェック
+                    if (this.interventionPoints.includes(this.messageCount)) {
+                        this.addSystemIntervention();
+                    }
+
+                    // 次のAIに応答させる（自動モードのみ）
+                    if (this.isRunning && this.messageCount < this.maxMessages && !this.isManualMode) {
+                        setTimeout(() => {
+                            const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
+                            const nextPrompt = this.generateNextPrompt(nextProvider, response);
+                            this.sendMessage(nextProvider, nextPrompt);
+                        }, 2500);
+                    } else if (this.messageCount >= this.maxMessages) {
+                        this.addMessage('system', '🎉 対話が完了しました！22メッセージに達したため終了します。');
+                        this.stopDialogue();
+                    }
+
+                } catch (error) {
+                    this.removeLastMessage();
+                    this.showError(`エラーが発生しました: ${error.message}`);
+                    console.error('API Error:', error);
                 }
             }
 
@@ -680,8 +825,7 @@
                 this.elements.startBtn.disabled = false;
                 this.elements.stopBtn.disabled = true;
                 this.removeContinueButton();
-                this.addMessage('system', '対話を停止しました。');
-                this.stopTimer();
+                this.addMessage('system', this.isManualMode ? '🎭 手動制御対話を停止しました。' : '🤖 自動対話を停止しました。');
             }
 
             clearChat() {
@@ -691,10 +835,10 @@
                 this.geminiCount = 0;
                 this.conversationHistory = [];
                 this.removeContinueButton();
-                this.stopTimer();
                 this.updateStats();
                 this.showWelcomeMessage();
                 this.hideError();
+                this.hideWarning();
             }
 
             addMessage(provider, content, isThinking = false) {
