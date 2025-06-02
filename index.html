@@ -446,7 +446,10 @@
             showWelcomeMessage() {
                 this.addMessage('system', 
                     'Crossthink AI自律対話システムへようこそ！\n' +
-                    'このデモでは、ChatGPTとGeminiが自律的に知的対話を行います。\n\n' +
+                    'このデモでは、ChatGPT（論理性重視・温度0.6）とGemini（創造性重視・温度0.8）が自律的に知的対話を行います。\n\n' +
+                    '対話の特徴:\n' +
+                    '🧠 ChatGPT: より論理的で構造化された分析\n' +
+                    '🎨 Gemini: より創造的で探索的な発想\n\n' +
                     'マネタイズポイント:\n' +
                     '📈 高品質な思考ログの自動生成\n' +
                     '🎓 教育コンテンツの大量作成\n' +
@@ -504,11 +507,19 @@
                 return true;
             }
 
-            // 応答の妥当性をチェックする関数（undefined対策の核心部分）
+            // 応答の妥当性をチェックする関数（強化版）
             validateResponse(response, provider) {
-                // nullまたはundefinedチェック
+                console.log(`${provider}: Validating response:`, response);
+                
+                // 型チェック
                 if (response === null || response === undefined) {
                     console.log(`${provider}: Response is null or undefined`);
+                    return false;
+                }
+
+                // オブジェクトまたは配列の場合の処理
+                if (typeof response === 'object') {
+                    console.log(`${provider}: Response is an object, attempting to extract text`);
                     return false;
                 }
 
@@ -516,19 +527,20 @@
                 const responseStr = String(response).trim();
                 
                 // 空文字列チェック
-                if (responseStr === '') {
+                if (responseStr === '' || responseStr.length === 0) {
                     console.log(`${provider}: Response is empty string`);
                     return false;
                 }
 
-                // "undefined"文字列チェック
-                if (responseStr.toLowerCase() === 'undefined') {
-                    console.log(`${provider}: Response is "undefined" string`);
+                // "undefined"や"null"文字列チェック
+                const invalidStrings = ['undefined', 'null', '[object Object]', '[object Promise]'];
+                if (invalidStrings.some(invalid => responseStr.toLowerCase().includes(invalid.toLowerCase()))) {
+                    console.log(`${provider}: Response contains invalid string pattern: "${responseStr}"`);
                     return false;
                 }
 
-                // 極端に短い応答をチェック（5文字未満）
-                if (responseStr.length < 5) {
+                // 極端に短い応答をチェック（3文字未満）
+                if (responseStr.length < 3) {
                     console.log(`${provider}: Response too short: "${responseStr}"`);
                     return false;
                 }
@@ -541,7 +553,9 @@
                     /denied/i,
                     /quota/i,
                     /rate.?limit/i,
-                    /timeout/i
+                    /timeout/i,
+                    /blocked/i,
+                    /unavailable/i
                 ];
 
                 for (const pattern of errorPatterns) {
@@ -551,6 +565,14 @@
                     }
                 }
 
+                // 日本語または英語の文字が含まれているかチェック
+                const hasValidContent = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\uFF65-\uFF9F\u3000-\u303Fa-zA-Z]/.test(responseStr);
+                if (!hasValidContent) {
+                    console.log(`${provider}: Response contains no valid Japanese or English content`);
+                    return false;
+                }
+
+                console.log(`${provider}: Response validation passed`);
                 return true;
             }
 
@@ -560,38 +582,41 @@
                 try {
                     this.addMessage(provider, '思考中...', true);
                     
-                    let response;
+                    let response = null;
                     let isValidResponse = false;
                     let attemptCount = 0;
-                    const maxAttempts = 3;
+                    const maxAttempts = 5; // 試行回数を増加
 
-                    // リトライループ（undefined対策）
+                    // リトライループ（stronger undefined protection）
                     while (!isValidResponse && attemptCount < maxAttempts) {
                         attemptCount++;
                         console.log(`${provider} API call attempt ${attemptCount}/${maxAttempts}`);
 
                         try {
+                            // 短い待機時間を追加（API安定性向上）
+                            if (attemptCount > 1) {
+                                await this.sleep(2000 * attemptCount); // 指数バックオフ
+                            }
+
                             if (provider === 'openai') {
                                 response = await this.callOpenAI(prompt);
                             } else {
                                 response = await this.callGemini(prompt);
                             }
 
+                            console.log(`${provider}: Raw response received:`, response);
+
                             // 応答の妥当性をチェック
                             if (this.validateResponse(response, provider)) {
                                 isValidResponse = true;
-                                console.log(`${provider}: Valid response received`);
+                                console.log(`${provider}: Valid response confirmed`);
                             } else {
                                 console.log(`${provider}: Invalid response, retrying... (attempt ${attemptCount})`);
-                                if (attemptCount < maxAttempts) {
-                                    await this.sleep(1000 * attemptCount); // 指数バックオフ
-                                }
+                                response = null; // リセット
                             }
                         } catch (apiError) {
-                            console.log(`${provider} API error on attempt ${attemptCount}:`, apiError);
-                            if (attemptCount < maxAttempts) {
-                                await this.sleep(1000 * attemptCount);
-                            }
+                            console.error(`${provider} API error on attempt ${attemptCount}:`, apiError);
+                            response = null; // エラー時はリセット
                         }
                     }
 
@@ -599,39 +624,39 @@
                     this.removeLastMessage();
 
                     // 有効な応答が得られなかった場合の処理
-                    if (!isValidResponse) {
+                    if (!isValidResponse || !response) {
+                        console.log(`${provider}: Using fallback response after ${attemptCount} attempts`);
                         const fallbackResponse = this.generateFallbackResponse(provider, prompt);
                         this.addMessage(provider, fallbackResponse);
                         this.showWarning(`${provider}からの応答が不安定です。代替応答を表示しています。`);
-                        
-                        if (provider === 'openai') {
-                            this.openaiCount++;
-                        } else {
-                            this.geminiCount++;
-                        }
+                        response = fallbackResponse;
                     } else {
                         // 正常な応答を表示
                         this.addMessage(provider, response);
-                        
-                        if (provider === 'openai') {
-                            this.openaiCount++;
-                        } else {
-                            this.geminiCount++;
-                        }
                     }
 
-                    this.conversationHistory.push({ provider, message: response || 'フォールバック応答' });
+                    // カウンターとログの更新
+                    if (provider === 'openai') {
+                        this.openaiCount++;
+                    } else {
+                        this.geminiCount++;
+                    }
+
+                    this.conversationHistory.push({ provider, message: response });
 
                     // 統計更新
                     this.updateStats();
 
-                    // 次のAIに応答させる
+                    // 次のAIに応答させる（メッセージ数制限チェック）
                     if (this.isRunning && this.messageCount < 20) {
                         setTimeout(() => {
                             const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
-                            const nextPrompt = this.generateNextPrompt(nextProvider, response || 'フォールバック応答');
+                            const nextPrompt = this.generateNextPrompt(nextProvider, response);
                             this.sendMessage(nextProvider, nextPrompt);
-                        }, 2000);
+                        }, 3000); // 待機時間を延長
+                    } else if (this.messageCount >= 20) {
+                        this.addMessage('system', '対話が20メッセージに達しました。対話を終了します。');
+                        this.stopDialogue();
                     }
 
                 } catch (error) {
@@ -648,6 +673,7 @@
 
             async callOpenAI(prompt) {
                 const apiKey = this.elements.openaiKey.value.trim();
+                
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -658,42 +684,64 @@
                         model: 'gpt-3.5-turbo',
                         messages: [{ role: 'user', content: prompt }],
                         max_tokens: 1000,
-                        temperature: 0.8
+                        temperature: 0.6, // より論理的・構造化重視
+                        top_p: 1,
+                        frequency_penalty: 0,
+                        presence_penalty: 0
                     })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`OpenAI API error: ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
                 }
 
                 const data = await response.json();
+                console.log('OpenAI response data:', data);
                 
-                // APIレスポンスの構造チェック
-                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                    throw new Error('Invalid OpenAI API response structure');
+                // APIレスポンスの厳密な構造チェック
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Invalid OpenAI API response: not an object');
                 }
 
-                return data.choices[0].message.content;
+                if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+                    throw new Error('Invalid OpenAI API response: no choices array');
+                }
+
+                if (!data.choices[0] || typeof data.choices[0] !== 'object') {
+                    throw new Error('Invalid OpenAI API response: invalid first choice');
+                }
+
+                if (!data.choices[0].message || typeof data.choices[0].message !== 'object') {
+                    throw new Error('Invalid OpenAI API response: no message object');
+                }
+
+                const content = data.choices[0].message.content;
+                
+                if (content === null || content === undefined) {
+                    throw new Error('OpenAI API response: content is null or undefined');
+                }
+
+                return String(content).trim();
             }
 
             async callGemini(prompt) {
                 const apiKey = this.elements.geminiKey.value.trim();
                 
+                // より安定したエンドポイントを使用
                 const endpoints = [
                     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
-                    `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`
                 ];
 
                 for (let i = 0; i < endpoints.length; i++) {
                     try {
-                        console.log(`Trying Gemini endpoint ${i + 1}: ${endpoints[i]}`);
+                        console.log(`Trying Gemini endpoint ${i + 1}`);
                         
                         const response = await fetch(endpoints[i], {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/json',
-                                'x-goog-api-key': apiKey
+                                'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
                                 contents: [{
@@ -703,7 +751,9 @@
                                 }],
                                 generationConfig: {
                                     maxOutputTokens: 1000,
-                                    temperature: 0.8
+                                    temperature: 0.8, // より創造的・探索的
+                                    topP: 0.8,
+                                    topK: 40
                                 },
                                 safetySettings: [
                                     {
@@ -712,6 +762,14 @@
                                     },
                                     {
                                         category: "HARM_CATEGORY_HATE_SPEECH",
+                                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                                    },
+                                    {
+                                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                                    },
+                                    {
+                                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
                                         threshold: "BLOCK_MEDIUM_AND_ABOVE"
                                     }
                                 ]
@@ -722,22 +780,50 @@
                             const data = await response.json();
                             console.log('Gemini response data:', data);
                             
-                            // APIレスポンスの構造チェック
-                            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-                                const responseText = data.candidates[0].content.parts[0].text;
-                                if (responseText && responseText.trim()) {
-                                    return responseText;
-                                }
+                            // APIレスポンスの厳密な構造チェック
+                            if (!data || typeof data !== 'object') {
+                                throw new Error('Invalid Gemini response: not an object');
                             }
-                            
-                            // 構造が正しくない場合はエラーとして扱う
-                            throw new Error('Invalid Gemini API response structure');
+
+                            if (!data.candidates || !Array.isArray(data.candidates) || data.candidates.length === 0) {
+                                throw new Error('Invalid Gemini response: no candidates array');
+                            }
+
+                            const candidate = data.candidates[0];
+                            if (!candidate || typeof candidate !== 'object') {
+                                throw new Error('Invalid Gemini response: invalid candidate object');
+                            }
+
+                            if (!candidate.content || typeof candidate.content !== 'object') {
+                                throw new Error('Invalid Gemini response: no content object');
+                            }
+
+                            if (!candidate.content.parts || !Array.isArray(candidate.content.parts) || candidate.content.parts.length === 0) {
+                                throw new Error('Invalid Gemini response: no parts array');
+                            }
+
+                            const part = candidate.content.parts[0];
+                            if (!part || typeof part !== 'object') {
+                                throw new Error('Invalid Gemini response: invalid part object');
+                            }
+
+                            const text = part.text;
+                            if (text === null || text === undefined) {
+                                throw new Error('Gemini response: text is null or undefined');
+                            }
+
+                            const responseText = String(text).trim();
+                            if (responseText.length > 0) {
+                                return responseText;
+                            } else {
+                                throw new Error('Gemini response: empty text');
+                            }
                         } else {
                             const errorText = await response.text();
                             console.log(`Gemini endpoint ${i + 1} failed:`, errorText);
                             
                             if (i === endpoints.length - 1) {
-                                throw new Error(`All Gemini endpoints failed. Last error: ${errorText}`);
+                                throw new Error(`All Gemini endpoints failed. Last error: ${response.status} - ${errorText}`);
                             }
                         }
                     } catch (error) {
@@ -753,14 +839,14 @@
             generateFallbackResponse(provider, prompt) {
                 const fallbackResponses = {
                     openai: [
-                        "申し訳ありませんが、現在システムに一時的な問題が発生しています。この興味深いトピックについて、後ほど改めて詳しくお話しできればと思います。",
-                        "技術的な問題により、十分な応答ができません。このテーマは重要な議論ポイントですので、安定した接続が回復次第、深く考察させていただきます。",
-                        "現在、応答生成に問題が発生しています。このような複雑で価値のあるテーマについては、より安定した環境で議論を続けたいと思います。"
+                        "申し訳ありませんが、現在システムに一時的な問題が発生しています。この興味深いトピックについて、後ほど改めて詳しくお話しできればと思います。相手の見解をぜひお聞かせください。",
+                        "技術的な問題により、十分な応答ができません。このテーマは重要な議論ポイントですので、安定した接続が回復次第、深く考察させていただきます。どのような視点をお持ちでしょうか？",
+                        "現在、応答生成に問題が発生しています。このような複雑で価値のあるテーマについては、より安定した環境で議論を続けたいと思います。ご意見をお聞かせください。"
                     ],
                     gemini: [
-                        "Google の AI として、現在技術的な制約があり適切な応答ができません。この重要なトピックについては、システムが安定次第、データに基づいた分析をお提供したいと思います。",
-                        "申し訳ありませんが、現在のシステム状況では十分な検討ができません。このような学術的なテーマには、より詳細な分析が必要ですので、後ほど改めて取り組ませていただきます。",
-                        "技術的な問題により、期待される品質の応答ができません。このテーマの重要性を考慮し、安定した環境で改めて議論に参加させていただきたいと思います。"
+                        "Google の AI として、現在技術的な制約があり適切な応答ができません。この重要なトピックについては、システムが安定次第、データに基づいた分析をお提供したいと思います。あなたのお考えはいかがでしょうか？",
+                        "申し訳ありませんが、現在のシステム状況では十分な検討ができません。このような学術的なテーマには、より詳細な分析が必要ですので、後ほど改めて取り組ませていただきます。ご見解をお聞かせください。",
+                        "技術的な問題により、期待される品質の応答ができません。このテーマの重要性を考慮し、安定した環境で改めて議論に参加させていただきたいと思います。どのようにお考えでしょうか？"
                     ]
                 };
 
@@ -771,19 +857,45 @@
             }
 
             generateNextPrompt(provider, previousMessage) {
+                // previousMessageの安全性チェック
+                const safePreviousMessage = this.sanitizeMessage(previousMessage);
+                
                 const otherProvider = provider === 'openai' ? 'Gemini' : 'ChatGPT';
                 const currentProvider = provider === 'openai' ? 'ChatGPT' : 'Gemini';
                 
                 return `あなたは知的議論を愛する研究者です。${otherProvider}が以下のように述べました：
 
-"${previousMessage}"
+"${safePreviousMessage}"
 
 これに対して、建設的で友好的な学術的議論を継続してください。相手の洞察を認めつつ、あなたの研究者としての視点を述べ、さらに議論を深めるための質問や新たな観点を提示してください。
 
 重要：結論を急がず、思考を深め続けることを重視してください。異なる視点を探求し、新たな問いを発見することが目的です。お互いの知見を尊重し合いながら、継続的な探求の姿勢で対話を進めてください。`;
             }
 
+            // メッセージの安全性を確保する関数
+            sanitizeMessage(message) {
+                if (!message || message === null || message === undefined) {
+                    return "（前回のメッセージが正常に受信できませんでした）";
+                }
+                
+                const messageStr = String(message).trim();
+                
+                if (messageStr.length === 0 || messageStr === 'undefined' || messageStr === 'null') {
+                    return "（前回のメッセージが正常に受信できませんでした）";
+                }
+                
+                // 極端に長いメッセージを短縮
+                if (messageStr.length > 1000) {
+                    return messageStr.substring(0, 997) + "...";
+                }
+                
+                return messageStr;
+            }
+
             addMessage(provider, content, isThinking = false) {
+                // contentの安全性チェック
+                const safeContent = this.sanitizeMessage(content);
+                
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${provider}-message`;
 
@@ -811,7 +923,7 @@
                         ${emoji} ${providerName}
                         <span class="message-time">${timeStr}</span>
                     </div>
-                    <div class="${isThinking ? 'thinking' : ''}">${content.replace(/\n/g, '<br>')}</div>
+                    <div class="${isThinking ? 'thinking' : ''}">${safeContent.replace(/\n/g, '<br>')}</div>
                 `;
 
                 this.elements.chatContainer.appendChild(messageDiv);
@@ -860,13 +972,26 @@
 
                 let conversationLog = '';
                 chatMessages.forEach((message, index) => {
-                    const header = message.querySelector('.message-header').textContent.trim();
-                    const content = message.querySelector('div:not(.message-header)').textContent.trim();
-                    const speaker = header.includes('ChatGPT') ? 'ChatGPT' : 'Gemini';
-                    const time = header.split(' ').pop();
+                    const header = message.querySelector('.message-header');
+                    const content = message.querySelector('div:not(.message-header)');
                     
-                    conversationLog += `${speaker} ${time}\n${content}\n\n`;
+                    if (header && content) {
+                        const headerText = header.textContent.trim();
+                        const contentText = content.textContent.trim();
+                        const speaker = headerText.includes('ChatGPT') ? 'ChatGPT' : 'Gemini';
+                        const time = headerText.split(' ').pop();
+                        
+                        // 安全性チェック
+                        if (contentText && contentText !== 'undefined' && contentText.length > 0) {
+                            conversationLog += `${speaker} ${time}\n${contentText}\n\n`;
+                        }
+                    }
                 });
+
+                if (conversationLog.length === 0) {
+                    this.showError('有効な対話ログが見つかりません。');
+                    return;
+                }
 
                 const summaryPrompt = `以下の対話ログを読み込んで、「${topic}」についての議論を、読みやすい文章として章立てして整理してください。
 
@@ -901,33 +1026,59 @@ ${conversationLog}
 **注意：AI同士の対話特有の冗長性を排除し、実務で使える内容に焦点を当ててください。**`;
 
                 // クリップボードにコピー
-                navigator.clipboard.writeText(summaryPrompt).then(() => {
-                    this.addMessage('system', 
-                        '📋 Gemini用要約プロンプトをクリップボードにコピーしました！\n\n' +
-                        '以下の手順で使用してください：\n' +
-                        '1. Geminiを開く\n' +
-                        '2. クリップボードの内容を貼り付け\n' +
-                        '3. 送信して要約を生成\n\n' +
-                        'プロンプトの文字数: ' + summaryPrompt.length + '文字'
-                    );
-                }).catch(err => {
-                    console.error('クリップボードへのコピーに失敗:', err);
-                    // フォールバック：テキストエリアに表示
-                    const summaryWindow = window.open('', '_blank');
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(summaryPrompt).then(() => {
+                        this.addMessage('system', 
+                            '📋 Gemini用要約プロンプトをクリップボードにコピーしました！\n\n' +
+                            '以下の手順で使用してください：\n' +
+                            '1. Geminiを開く\n' +
+                            '2. クリップボードの内容を貼り付け\n' +
+                            '3. 送信して要約を生成\n\n' +
+                            'プロンプトの文字数: ' + summaryPrompt.length + '文字'
+                        );
+                    }).catch(err => {
+                        console.error('クリップボードへのコピーに失敗:', err);
+                        this.showPromptWindow(summaryPrompt);
+                    });
+                } else {
+                    this.showPromptWindow(summaryPrompt);
+                }
+            }
+
+            showPromptWindow(summaryPrompt) {
+                // フォールバック：新しいウィンドウで表示
+                const summaryWindow = window.open('', '_blank');
+                if (summaryWindow) {
                     summaryWindow.document.write(`
                         <html>
-                            <head><title>Gemini用要約プロンプト</title></head>
+                            <head>
+                                <title>Gemini用要約プロンプト</title>
+                                <style>
+                                    body { font-family: sans-serif; padding: 20px; }
+                                    textarea { width: 100%; height: 80vh; font-family: monospace; }
+                                    button { padding: 10px 20px; margin: 10px 0; }
+                                </style>
+                            </head>
                             <body>
                                 <h2>以下をコピーしてGeminiに貼り付けてください：</h2>
-                                <textarea style="width:100%;height:80vh;">${summaryPrompt}</textarea>
+                                <button onclick="document.getElementById('prompt').select(); document.execCommand('copy'); alert('コピーしました！');">コピー</button>
+                                <textarea id="prompt" readonly>${summaryPrompt}</textarea>
                             </body>
                         </html>
                     `);
-                });
+                } else {
+                    // ポップアップがブロックされた場合
+                    this.addMessage('system', 
+                        '⚠️ ポップアップがブロックされています。\n' +
+                        'ブラウザの設定でポップアップを許可するか、手動でプロンプトを作成してください。\n\n' +
+                        '対話ログの文字数: ' + conversationLog.length + '文字'
+                    );
+                }
             }
 
             showError(message) {
-                this.elements.errorDisplay.textContent = `❌ エラー: ${message}`;
+                const safeMessage = this.sanitizeMessage(message);
+                this.elements.errorDisplay.textContent = `❌ エラー: ${safeMessage}`;
                 this.elements.errorDisplay.style.display = 'block';
                 this.hideWarning();
             }
@@ -937,7 +1088,8 @@ ${conversationLog}
             }
 
             showWarning(message) {
-                this.elements.warningDisplay.textContent = `⚠️ 警告: ${message}`;
+                const safeMessage = this.sanitizeMessage(message);
+                this.elements.warningDisplay.textContent = `⚠️ 警告: ${safeMessage}`;
                 this.elements.warningDisplay.style.display = 'block';
             }
 
@@ -946,16 +1098,16 @@ ${conversationLog}
             }
 
             updateStats() {
-                this.elements.totalMessages.textContent = this.messageCount;
-                this.elements.openaiMessages.textContent = this.openaiCount;
-                this.elements.geminiMessages.textContent = this.geminiCount;
+                this.elements.totalMessages.textContent = this.messageCount || 0;
+                this.elements.openaiMessages.textContent = this.openaiCount || 0;
+                this.elements.geminiMessages.textContent = this.geminiCount || 0;
             }
 
             startTimer() {
                 const updateTimer = () => {
                     if (this.startTime) {
                         const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-                        this.elements.elapsed.textContent = elapsed;
+                        this.elements.elapsed.textContent = elapsed || 0;
                     }
                     if (this.isRunning) {
                         setTimeout(updateTimer, 1000);
@@ -965,9 +1117,23 @@ ${conversationLog}
             }
         }
 
-        // システム初期化
+        // システム初期化（エラーハンドリング強化）
         document.addEventListener('DOMContentLoaded', () => {
-            new AIDialogueSystem();
+            try {
+                new AIDialogueSystem();
+            } catch (error) {
+                console.error('システム初期化エラー:', error);
+                alert('システムの初期化に失敗しました。ページを再読み込みしてください。');
+            }
+        });
+
+        // グローバルエラーハンドラー
+        window.addEventListener('error', (event) => {
+            console.error('未処理エラー:', event.error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('未処理のPromise拒否:', event.reason);
         });
     </script>
 </body>
