@@ -353,7 +353,7 @@
             
             <div class="controls">
                 <button id="startBtn" class="btn btn-primary">🚀 対話開始</button>
-                <button id="stopBtn" class="btn btn-danger" disabled>⏹️ 停止</button>
+                <button id="stopBtn" class="btn btn-danger" disabled⏹️ 停止</button>
                 <button id="clearBtn" class="btn btn-secondary">🗑️ クリア</button>
                 <button id="exportBtn" class="btn btn-secondary">📝 要約プロンプト生成</button>
             </div>
@@ -647,6 +647,20 @@
                     // 統計更新
                     this.updateStats();
 
+                    // 定期的な要約と方向性チェック（10メッセージごと）
+                    if (this.messageCount > 0 && this.messageCount % 10 === 0) {
+                        this.addMessage('system', 
+                            `📊 **対話の中間要約** (${this.messageCount}メッセージ目)\n\n` +
+                            `元のトピック: "${this.elements.topicInput.value.trim()}"\n\n` +
+                            `現在の議論は元のテーマから${this.messageCount > 15 ? '大きく' : '少し'}発展しています。\n` +
+                            `次の応答では、元のトピックとの関連性を明確にしながら議論を続けることをお勧めします。\n\n` +
+                            `💡 **より良い対話のために:**\n` +
+                            `• 具体的な例や事例を含める\n` +
+                            `• 実現可能な提案を重視する\n` +
+                            `• 元のテーマとの関連を意識する`
+                        );
+                    }
+
                     // 次のAIに応答させる（メッセージ数制限チェック）
                     if (this.isRunning && this.messageCount < 20) {
                         setTimeout(() => {
@@ -862,14 +876,44 @@
                 
                 const otherProvider = provider === 'openai' ? 'Gemini' : 'ChatGPT';
                 const currentProvider = provider === 'openai' ? 'ChatGPT' : 'Gemini';
+                const originalTopic = this.elements.topicInput.value.trim();
                 
-                return `あなたは知的議論を愛する研究者です。${otherProvider}が以下のように述べました：
+                // メッセージ数に応じて軌道修正を実装
+                const needsRefocus = this.messageCount % 6 === 0 && this.messageCount > 0; // 6メッセージごとに軌道修正
+                const needsConcreteness = this.messageCount > 8; // 8メッセージ以降は具体性を重視
+                
+                let basePrompt = `あなたは知的議論を愛する研究者です。${otherProvider}が以下のように述べました：
 
-"${safePreviousMessage}"
+"${safePreviousMessage}"`;
+
+                if (needsRefocus) {
+                    // 軌道修正プロンプト
+                    basePrompt += `
+
+🎯 **重要**: 議論が深くなってきましたが、元のトピック「${originalTopic}」に焦点を戻してください。これまでの議論を踏まえつつ、元のテーマに直接関連する具体的な観点から応答してください。
+
+応答の際は以下を心がけてください：
+- 元のトピックとの関連を明確に示す
+- 具体的な例や実例を含める
+- 抽象的な理論よりも実践的な観点を重視する`;
+                } else if (needsConcreteness) {
+                    // 具体性重視プロンプト
+                    basePrompt += `
+
+💡 **重要**: 応答する際は具体性を重視してください：
+- 抽象的な概念には具体例を付ける
+- 実際の技術名、企業名、事例を挙げる
+- 「どのように実現するか」の具体的手段を説明する
+- 数値や期間などの定量的情報を含める`;
+                }
+
+                basePrompt += `
 
 これに対して、建設的で友好的な学術的議論を継続してください。相手の洞察を認めつつ、あなたの研究者としての視点を述べ、さらに議論を深めるための質問や新たな観点を提示してください。
 
 重要：結論を急がず、思考を深め続けることを重視してください。異なる視点を探求し、新たな問いを発見することが目的です。お互いの知見を尊重し合いながら、継続的な探求の姿勢で対話を進めてください。`;
+
+                return basePrompt;
             }
 
             // メッセージの安全性を確保する関数
