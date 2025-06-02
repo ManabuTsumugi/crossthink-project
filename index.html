@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI自律対話システム - Crossthink Demo</title>
+    <title>AI自律対話システム - Crossthink Demo (改良版)</title>
     <style>
         * {
             margin: 0;
@@ -294,11 +294,44 @@
             left: 0;
         }
 
-        /* 合意検知関連のスタイル */
+        /* 改良版警告システム */
+        .warning-notification {
+            background: linear-gradient(135deg, #ff9500 0%, #ff6b6b 100%);
+            border-left: 5px solid #ff3838;
+            animation: warningPulse 1.5s infinite;
+        }
+
+        .fake-agreement-notification {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            border-left: 5px solid #c53030;
+            animation: dangerPulse 2s infinite;
+        }
+
+        .loop-notification {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+            border-left: 5px solid #6b46c1;
+            animation: loopSpin 3s infinite;
+        }
+
         .agreement-notification {
             background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
             border-left: 5px solid #ec4899;
             animation: pulse 2s infinite;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+        }
+
+        @keyframes dangerPulse {
+            0%, 100% { opacity: 1; background-position: 0% 50%; }
+            50% { opacity: 0.9; background-position: 100% 50%; }
+        }
+
+        @keyframes loopSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @keyframes pulse {
@@ -327,10 +360,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🤖 AI自律対話システム</h1>
+            <h1>🤖 AI自律対話システム（改良版）</h1>
             <p>ChatGPT × Gemini による知的対話プラットフォーム</p>
             <div class="demo-label">
-                💎 Crossthink プロトタイプ - NEDO SBIR申請用デモンストレーション
+                💎 Crossthink プロトタイプ - 高度合意検知システム搭載
             </div>
         </div>
 
@@ -393,6 +426,7 @@
                 <li>教育コンテンツの大量作成</li>
                 <li>企業向けアイデア創出サービス</li>
                 <li>研究用データセット提供</li>
+                <li>🆕 偽装合意・無限ループ検知技術のライセンス</li>
             </ul>
         </div>
 
@@ -402,65 +436,115 @@
     </div>
 
     <script>
-        // 合意検知システムクラス
-        class AgreementDetector {
+        // 🚨 改良版合意検知システム
+        class ImprovedAgreementDetector {
             constructor() {
                 this.patterns = {
-                    surface: [
-                        /なるほど.*ですね/i,
-                        /その通り/i,
-                        /理解.*ました/i,
-                        /同感です/i,
-                        /おっしゃる通り/i,
-                        /確かに.*そうですね/i
+                    // 偽装合意（Geminiの常套手段）
+                    fakeAgreement: [
+                        /適切.*(?:しかし|ただし|しかしながら).*さらに/i,
+                        /同意.*(?:しかしながら|ただし).*いくつか/i,
+                        /優れた.*(?:ですが|だが).*より/i,
+                        /的確.*(?:ただし|しかし).*考慮/i,
+                        /重要.*(?:しかし|ただし).*掘り下げ/i,
+                        /出発点.*(?:さらに|より).*検討/i,
+                        /興味深い.*(?:ただし|しかし)/i,
+                        /価値.*(?:しかし|ただし).*さらなる/i
                     ],
-                    deep: [
-                        /根本的に.*同意/i,
-                        /本質的に.*理解/i,
-                        /完全に.*合意/i,
-                        /深く.*共感/i,
-                        /心から.*同意/i,
-                        /本当に.*その通り/i
+                    
+                    // 完全服従（ChatGPTの降参シグナル）
+                    totalSubmission: [
+                        /私は.*の提案に同意します/i,
+                        /.*の意見に従って/i,
+                        /以下の質問を提案します/i,
+                        /さらなる議論のため.*以下/i,
+                        /Geminiの.*に賛成/i,
+                        /あなたの.*正しい/i,
+                        /私もあなたと同じ/i
                     ],
-                    creative: [
-                        /新しい.*視点.*生まれ/i,
-                        /美しい.*結論/i,
-                        /統合.*された/i,
-                        /より高い.*次元/i,
-                        /結実.*しました/i,
-                        /素晴らしい.*洞察/i,
-                        /画期的.*アイデア/i
+                    
+                    // 疲労・思考停止シグナル
+                    fatigue: [
+                        /議論を深めるため.*以下/i,
+                        /より深い理解.*以下/i,
+                        /多角的な視点.*以下/i,
+                        /以上の観点をもとに.*以下/i,
+                        /この複雑な.*について.*以下/i,
+                        /さらに.*検討.*以下.*質問/i
+                    ],
+                    
+                    // 哲学的無限ループ
+                    philosophicalLoop: [
+                        /実存主義.*現代社会.*問題/i,
+                        /テクノロジー.*人間.*存在/i,
+                        /個人.*責任.*社会/i,
+                        /創造性.*本質.*とは/i,
+                        /人間性.*定義.*難しい/i,
+                        /根本的.*問い.*投げかけ/i
+                    ],
+                    
+                    // 真の合意（実際の終了条件）
+                    realAgreement: [
+                        /この議論は.*十分/i,
+                        /結論に.*達し/i,
+                        /まとめ.*ましょう/i,
+                        /終了.*し/i,
+                        /完成.*し/i,
+                        /素晴らしい.*対話でした/i,
+                        /有意義.*議論.*終わり/i
+                    ],
+                    
+                    // 強制停止トリガー
+                    emergencyStop: [
+                        /議論.*無限.*続く/i,
+                        /堂々巡り/i,
+                        /同じ.*繰り返し/i,
+                        /進展.*ない/i
                     ]
                 };
                 
-                this.stopTriggers = [
-                    /議論.*終了/i,
-                    /合意.*達し/i,
-                    /結論.*出ました/i,
-                    /対話.*完成/i,
-                    /これで.*十分/i,
-                    /美しく.*完成/i
-                ];
+                this.speakerHistory = [];
+                this.loopCounter = 0;
+                this.maxMessages = 50; // 最大メッセージ数制限
             }
             
-            detect(message) {
-                // 即座停止チェック
-                for (let trigger of this.stopTriggers) {
-                    if (trigger.test(message)) {
-                        return 'stop';
-                    }
+            detect(message, provider, totalMessages) {
+                // 緊急停止条件
+                if (totalMessages >= this.maxMessages) {
+                    return 'emergency_limit';
                 }
                 
-                // 合意レベルチェック
-                for (let level in this.patterns) {
-                    for (let pattern of this.patterns[level]) {
+                // 履歴を記録
+                this.speakerHistory.push({provider, message, timestamp: Date.now()});
+                if (this.speakerHistory.length > 10) {
+                    this.speakerHistory.shift(); // 最新10件のみ保持
+                }
+                
+                // 各パターンをチェック
+                for (let [type, patterns] of Object.entries(this.patterns)) {
+                    for (let pattern of patterns) {
                         if (pattern.test(message)) {
-                            return level;
+                            // ループカウンターの更新
+                            if (type === 'philosophicalLoop' || type === 'fatigue') {
+                                this.loopCounter++;
+                                if (this.loopCounter >= 3) {
+                                    return 'infinite_loop';
+                                }
+                            } else {
+                                this.loopCounter = 0; // 他のパターンでリセット
+                            }
+                            
+                            return type;
                         }
                     }
                 }
                 
                 return null;
+            }
+            
+            reset() {
+                this.speakerHistory = [];
+                this.loopCounter = 0;
             }
         }
 
@@ -473,7 +557,7 @@
                 this.startTime = null;
                 this.currentSpeaker = 'openai';
                 this.conversationHistory = [];
-                this.agreementDetector = new AgreementDetector(); // 合意検知器を初期化
+                this.agreementDetector = new ImprovedAgreementDetector();
                 
                 this.initializeElements();
                 this.bindEvents();
@@ -507,15 +591,19 @@
 
             showWelcomeMessage() {
                 this.addMessage('system', 
-                    'Crossthink AI自律対話システムへようこそ！\n' +
+                    'Crossthink AI自律対話システム（改良版）へようこそ！\n' +
                     'このデモでは、ChatGPTとGeminiが自律的に知的対話を行います。\n\n' +
-                    '✨ 新機能：合意形成自動検知システム搭載\n' +
-                    '🎯 対話の自然な終了点を検知します\n\n' +
+                    '🆕 改良版機能:\n' +
+                    '🚨 偽装合意検知システム搭載\n' +
+                    '🔄 無限ループ自動停止機能\n' +
+                    '⚖️ AIバランス調整機能\n' +
+                    '🛡️ 最大50メッセージ制限\n\n' +
                     'マネタイズポイント:\n' +
                     '📈 高品質な思考ログの自動生成\n' +
                     '🎓 教育コンテンツの大量作成\n' +
                     '💡 企業向けアイデア創出サービス\n' +
-                    '🔬 研究用データセット提供'
+                    '🔬 研究用データセット提供\n' +
+                    '🆕 偽装合意・無限ループ検知技術のライセンス'
                 );
             }
 
@@ -526,16 +614,17 @@
                 this.startTime = Date.now();
                 this.currentSpeaker = 'openai';
                 this.conversationHistory = [];
+                this.agreementDetector.reset();
                 
                 this.elements.startBtn.disabled = true;
                 this.elements.stopBtn.disabled = false;
                 this.hideError();
 
                 const topic = this.elements.topicInput.value;
-                this.addMessage('system', `対話トピック: "${topic}" で自律対話を開始します。\n✨ 合意形成検知システム稼働中`);
+                this.addMessage('system', `対話トピック: "${topic}" で自律対話を開始します。\n🚨 改良版合意検知システム稼働中`);
 
                 this.startTimer();
-                await this.sendMessage('openai', `${topic}について、Geminiと深い対話をしてください。最初にあなたの見解を述べて、Geminiに質問を投げかけてください。`);
+                await this.sendMessage('openai', `${topic}について、Geminiと深い対話をしてください。最初にあなたの見解を述べて、Geminiに質問を投げかけてください。建設的で実りある議論を心がけてください。`);
             }
 
             validateInputs() {
@@ -581,17 +670,17 @@
                     this.conversationHistory.push({ provider, message: response });
                     this.updateStats();
 
-                    // 🎯 合意検知システム実行
-                    const agreementLevel = this.agreementDetector.detect(response);
+                    // 🚨 改良版合意検知システム実行
+                    const agreementLevel = this.agreementDetector.detect(response, provider, this.messageCount);
                     if (agreementLevel) {
                         setTimeout(() => {
-                            this.handleAgreement(agreementLevel);
+                            this.handleAdvancedAgreement(agreementLevel, provider);
                         }, 2000);
-                        return; // 合意検知時は次のメッセージ送信を停止
+                        return;
                     }
 
                     // 次のAIに応答させる
-                    if (this.isRunning) {
+                    if (this.isRunning && this.messageCount < 50) {
                         setTimeout(() => {
                             const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
                             const nextPrompt = this.generateNextPrompt(nextProvider, response);
@@ -606,13 +695,77 @@
                 }
             }
 
-            // 🌟 合意検知処理メソッド
-            handleAgreement(level) {
-                if (level === 'stop') {
-                    this.executeGracefulStop();
-                } else {
-                    this.confirmAgreement(level);
+            // 🚨 改良版合意処理システム
+            handleAdvancedAgreement(level, provider) {
+                switch(level) {
+                    case 'fakeAgreement':
+                        this.addSpecialMessage('fake-agreement', 
+                            '🚨 偽装合意を検知しました！\n\n' +
+                            '一方のAIが「同意しているふり」をして建設的でない批判を続けています。\n' +
+                            '議論の方向性を調整します。');
+                        this.redirectConversation(provider);
+                        break;
+                        
+                    case 'totalSubmission':
+                        this.addSpecialMessage('warning', 
+                            '🏳️ 完全服従状態を検知しました！\n\n' +
+                            '一方のAIが思考を放棄し、従属状態になりました。\n' +
+                            'バランスの取れた議論のため、対話を調整します。');
+                        this.balanceConversation(provider);
+                        break;
+                        
+                    case 'infinite_loop':
+                        this.addSpecialMessage('loop', 
+                            '🌀 哲学的無限ループを検知しました！\n\n' +
+                            '同じような抽象的議論が繰り返されています。\n' +
+                            '議論を収束させるため、結論への誘導を開始します。');
+                        this.forceConclusion();
+                        break;
+                        
+                    case 'emergency_limit':
+                        this.addSpecialMessage('warning', 
+                            '🛑 最大メッセージ数に達しました！\n\n' +
+                            '50メッセージの制限に達したため、強制終了します。');
+                        this.executeGracefulStop();
+                        break;
+                        
+                    case 'realAgreement':
+                        this.executeGracefulStop();
+                        break;
+                        
+                    default:
+                        // 従来の合意検知
+                        this.confirmAgreement(level);
+                        break;
                 }
+            }
+
+            // 偽装合意への対処
+            redirectConversation(provider) {
+                const redirectPrompt = `前回の応答は建設的でない批判に終始していました。批判ではなく、具体的で実行可能な提案や新しい視点を提示してください。「〜ですが、しかし〜」のような表現は避け、前向きで建設的な議論を心がけてください。`;
+                
+                setTimeout(() => {
+                    this.sendMessage(provider, redirectPrompt);
+                }, 3000);
+            }
+
+            // 服従状態への対処
+            balanceConversation(servantProvider) {
+                const balancePrompt = `あなた自身の独自の視点や意見を示してください。相手の意見に単純に同意するのではなく、あなた独自の分析や提案を提示し、議論に新たな価値を加えてください。`;
+                
+                setTimeout(() => {
+                    this.sendMessage(servantProvider, balancePrompt);
+                }, 3000);
+            }
+
+            // 強制結論誘導
+            forceConclusion() {
+                const forcedPrompt = `この議論は十分に深まりました。これまでの議論の重要なポイントを3つに絞って、簡潔に結論をまとめてください。新たな論点の提起は避け、実用的な要約に集中してください。`;
+                
+                setTimeout(() => {
+                    const lastProvider = this.conversationHistory[this.conversationHistory.length - 1].provider;
+                    this.sendMessage(lastProvider, forcedPrompt);
+                }, 3000);
             }
 
             confirmAgreement(level) {
@@ -650,8 +803,8 @@
 💎 この探求で得られた価値:
 知的対話における人工知能同士の協調と、新たな理解の創発
 
-🚀 Crossthink対話システム - 美しい自然終了
-対話は合意形成により自動完了いたしました。
+🚀 Crossthink改良版対話システム - 美しい自然終了
+対話は高度合意検知により自動完了いたしました。
 
 未来への示唆: この対話ログは、AI時代の知的協働の可能性を示す貴重な記録となりました。
         `;
@@ -668,9 +821,16 @@
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString('ja-JP');
 
+                const typeLabels = {
+                    'agreement': '🎭 Crossthink合意検知システム',
+                    'warning': '⚠️ Crossthink警告システム',
+                    'fake-agreement': '🚨 Crossthink偽装合意検知',
+                    'loop': '🌀 Crossthinkループ検知システム'
+                };
+
                 messageDiv.innerHTML = `
                     <div class="message-header">
-                        🎭 Crossthink合意検知システム
+                        ${typeLabels[type] || '🔍 Crossthinkシステム'}
                         <span class="message-time">${timeStr}</span>
                     </div>
                     <div>${content.replace(/\n/g, '<br>')}</div>
@@ -792,7 +952,7 @@
 
             generateNextPrompt(provider, previousMessage) {
                 const otherProvider = provider === 'openai' ? 'Gemini' : 'ChatGPT';
-                return `${otherProvider}が以下のように述べました：\n\n"${previousMessage}"\n\nこれに対してあなたの見解を述べ、さらに議論を深めるための質問や観点を提示してください。`;
+                return `${otherProvider}が以下のように述べました：\n\n"${previousMessage}"\n\nこれに対してあなたの見解を述べ、さらに議論を深めるための質問や観点を提示してください。建設的で実用的な議論を心がけ、抽象的すぎる哲学論は避けてください。`;
             }
 
             addMessage(provider, content, isThinking = false) {
@@ -854,6 +1014,7 @@
                 this.openaiCount = 0;
                 this.geminiCount = 0;
                 this.conversationHistory = [];
+                this.agreementDetector.reset();
                 this.updateStats();
                 this.showWelcomeMessage();
                 this.hideError();
@@ -861,7 +1022,7 @@
 
             generateSummaryPrompt() {
                 const topic = this.elements.topicInput.value.trim();
-                const chatMessages = this.elements.chatContainer.querySelectorAll('.message:not(.system-message)');
+                const chatMessages = this.elements.chatContainer.querySelectorAll('.message:not(.system-message):not(.warning-notification):not(.fake-agreement-notification):not(.loop-notification):not(.agreement-notification)');
                 
                 if (chatMessages.length === 0) {
                     this.showError('対話ログがありません。まず対話を開始してください。');
@@ -872,10 +1033,13 @@
                 chatMessages.forEach((message, index) => {
                     const header = message.querySelector('.message-header').textContent.trim();
                     const content = message.querySelector('div:not(.message-header)').textContent.trim();
-                    const speaker = header.includes('ChatGPT') ? 'ChatGPT' : 'Gemini';
-                    const time = header.split(' ').pop();
                     
-                    conversationLog += `${speaker} ${time}\n${content}\n\n`;
+                    if (!content.includes('思考中...')) {
+                        const speaker = header.includes('ChatGPT') ? 'ChatGPT' : 'Gemini';
+                        const time = header.split(' ').pop();
+                        
+                        conversationLog += `${speaker} ${time}\n${content}\n\n`;
+                    }
                 });
 
                 const summaryPrompt = `以下の対話ログを読み込んで、「${topic}」についての議論を、読みやすい文章として章立てして整理してください。
@@ -886,6 +1050,7 @@
 3. **専門用語には簡単な説明**を併記
 4. **対話で出た具体的な解決策**を整理
 5. **全体で5000-6000文字程度**に収める
+6. **偽装合意や無意味な繰り返しは除外**して整理
 
 【対話ログ】
 ${conversationLog}
@@ -908,12 +1073,16 @@ ${conversationLog}
 ## 結論：推奨される方向性
 [ここに最終的な推奨事項を記載]
 
-**注意：AI同士の対話特有の冗長性を排除し、実務で使える内容に焦点を当ててください。**`;
+**注意：AI同士の対話特有の冗長性や偽装合意パターンを排除し、実務で使える内容に焦点を当ててください。**`;
 
                 // クリップボードにコピー
                 navigator.clipboard.writeText(summaryPrompt).then(() => {
                     this.addMessage('system', 
-                        '📋 Gemini用要約プロンプトをクリップボードにコピーしました！\n\n' +
+                        '📋 改良版Gemini用要約プロンプトをクリップボードにコピーしました！\n\n' +
+                        '🆕 改良点:\n' +
+                        '- 偽装合意パターンの除外指示追加\n' +
+                        '- システム警告メッセージの自動除外\n' +
+                        '- より実用的な要約フォーマット\n\n' +
                         '以下の手順で使用してください：\n' +
                         '1. Geminiを開く\n' +
                         '2. クリップボードの内容を貼り付け\n' +
@@ -926,7 +1095,7 @@ ${conversationLog}
                     const summaryWindow = window.open('', '_blank');
                     summaryWindow.document.write(`
                         <html>
-                            <head><title>Gemini用要約プロンプト</title></head>
+                            <head><title>改良版Gemini用要約プロンプト</title></head>
                             <body>
                                 <h2>以下をコピーしてGeminiに貼り付けてください：</h2>
                                 <textarea style="width:100%;height:80vh;">${summaryPrompt}</textarea>
