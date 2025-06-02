@@ -119,26 +119,6 @@
             margin-bottom: 20px;
         }
 
-        .consensus-settings {
-            background: #e8f5e8;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 5px solid #28a745;
-        }
-
-        .consensus-settings h3 {
-            color: #155724;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-
-        .consensus-settings p {
-            color: #155724;
-            font-size: 0.9em;
-            line-height: 1.4;
-        }
-
         .controls {
             display: flex;
             gap: 15px;
@@ -218,26 +198,6 @@
 
         .openai-stat .stat-number { color: #10a37f; }
         .gemini-stat .stat-number { color: #4285f4; }
-
-        .consensus-indicator {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            margin: 20px 30px;
-            display: none;
-        }
-
-        .consensus-indicator.show {
-            display: block;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
 
         .error-display {
             background: #ff6b6b;
@@ -357,7 +317,7 @@
             <h1>🤖 AI自律対話システム</h1>
             <p>ChatGPT × Gemini による知的対話プラットフォーム</p>
             <div class="demo-label">
-                💎 Crossthink プロトタイプ - 合意形成機能搭載
+                💎 Crossthink プロトタイプ - NEDO SBIR申請用デモンストレーション
             </div>
         </div>
 
@@ -381,15 +341,11 @@
                    placeholder="AI時代における人間の創造性とは何か？" 
                    value="AI時代における人間の創造性とは何か？">
             
-            <div class="consensus-settings">
-                <h3>🎯 合意検出機能</h3>
-                <p>両AIが完全に同意に達するまで対話を継続します。合意検出キーワード：「完全に同意」「最終的な結論」「合意に達し」など</p>
-            </div>
-            
             <div class="controls">
                 <button id="startBtn" class="btn btn-primary">🚀 対話開始</button>
                 <button id="stopBtn" class="btn btn-danger" disabled>⏹️ 停止</button>
                 <button id="clearBtn" class="btn btn-secondary">🗑️ クリア</button>
+                <button id="exportBtn" class="btn btn-secondary">📝 要約プロンプト生成</button>
             </div>
         </div>
 
@@ -415,16 +371,11 @@
             </div>
         </div>
 
-        <div class="consensus-indicator" id="consensusIndicator">
-            🎉 両AIが合意に達しました！対話完了
-        </div>
-
         <div class="error-display" id="errorDisplay"></div>
 
         <div class="monetization-info">
             <h3>💰 マネタイズポイント:</h3>
             <ul>
-                <li>合意形成プロセスの自動記録・分析</li>
                 <li>高品質な思考ログの自動生成</li>
                 <li>教育コンテンツの大量作成</li>
                 <li>企業向けアイデア創出サービス</li>
@@ -447,7 +398,6 @@
                 this.startTime = null;
                 this.currentSpeaker = 'openai'; // 最初はOpenAIから開始
                 this.conversationHistory = [];
-                this.consensusReached = false;
                 
                 this.initializeElements();
                 this.bindEvents();
@@ -462,9 +412,9 @@
                     startBtn: document.getElementById('startBtn'),
                     stopBtn: document.getElementById('stopBtn'),
                     clearBtn: document.getElementById('clearBtn'),
+                    exportBtn: document.getElementById('exportBtn'),
                     chatContainer: document.getElementById('chatContainer'),
                     errorDisplay: document.getElementById('errorDisplay'),
-                    consensusIndicator: document.getElementById('consensusIndicator'),
                     totalMessages: document.getElementById('totalMessages'),
                     openaiMessages: document.getElementById('openaiMessages'),
                     geminiMessages: document.getElementById('geminiMessages'),
@@ -476,17 +426,18 @@
                 this.elements.startBtn.addEventListener('click', () => this.startDialogue());
                 this.elements.stopBtn.addEventListener('click', () => this.stopDialogue());
                 this.elements.clearBtn.addEventListener('click', () => this.clearChat());
+                this.elements.exportBtn.addEventListener('click', () => this.generateSummaryPrompt());
             }
 
             showWelcomeMessage() {
                 this.addMessage('system', 
-                    'Crossthink AI自律対話システム（合意検出機能付き）へようこそ！\n' +
-                    'このデモでは、ChatGPTとGeminiが合意に達するまで自律的に知的対話を行います。\n\n' +
-                    '新機能:\n' +
-                    '🎯 自動合意検出システム\n' +
-                    '📝 より長い応答（最大600トークン）\n' +
-                    '🔄 合意まで継続対話\n' +
-                    '💡 建設的議論の促進'
+                    'Crossthink AI自律対話システムへようこそ！\n' +
+                    'このデモでは、ChatGPTとGeminiが自律的に知的対話を行います。\n\n' +
+                    'マネタイズポイント:\n' +
+                    '📈 高品質な思考ログの自動生成\n' +
+                    '🎓 教育コンテンツの大量作成\n' +
+                    '💡 企業向けアイデア創出サービス\n' +
+                    '🔬 研究用データセット提供'
                 );
             }
 
@@ -497,21 +448,19 @@
                 this.startTime = Date.now();
                 this.currentSpeaker = 'openai';
                 this.conversationHistory = [];
-                this.consensusReached = false;
                 
                 this.elements.startBtn.disabled = true;
                 this.elements.stopBtn.disabled = false;
-                this.elements.consensusIndicator.classList.remove('show');
                 this.hideError();
 
                 const topic = this.elements.topicInput.value;
-                this.addMessage('system', `対話トピック: "${topic}" で合意形成対話を開始します。合意に達するまで継続します。`);
+                this.addMessage('system', `対話トピック: "${topic}" で自律対話を開始します。`);
 
                 // タイマー開始
                 this.startTimer();
 
                 // 最初のメッセージをOpenAIから開始
-                await this.sendMessage('openai', `${topic}について、Geminiと深い対話をして最終的な合意を目指してください。まず、あなたの詳細な見解を述べて、Geminiに具体的な質問を投げかけてください。できるだけ詳しく説明してください。`);
+                await this.sendMessage('openai', `${topic}について、Geminiと深い対話をしてください。最初にあなたの見解を述べて、Geminiに質問を投げかけてください。`);
             }
 
             validateInputs() {
@@ -541,7 +490,7 @@
                 if (!this.isRunning) return;
 
                 try {
-                    this.addMessage(provider, '詳細な思考中...', true);
+                    this.addMessage(provider, '思考中...', true);
                     
                     let response;
                     if (provider === 'openai') {
@@ -562,28 +511,13 @@
                     // 統計更新
                     this.updateStats();
 
-                    // 合意チェック（最低2往復後）
-                    if (this.conversationHistory.length >= 4) {
-                        const lastTwo = this.conversationHistory.slice(-2);
-                        if (this.detectConsensus(lastTwo[0].message, lastTwo[1].message)) {
-                            this.consensusReached = true;
-                            this.elements.consensusIndicator.classList.add('show');
-                            this.addMessage('system', '🎉 両AIが完全な合意に達しました！対話を終了します。\n\n合意内容が上記の対話で確認できます。');
-                            this.stopDialogue();
-                            return;
-                        }
-                    }
-
-                    // 次のAIに応答させる（合意未達成且つ安全装置内）
-                    if (this.isRunning && !this.consensusReached && this.messageCount < 200) { // 最大100往復の安全装置
+                    // 次のAIに応答させる
+                    if (this.isRunning && this.messageCount < 20) { // 最大20往復
                         setTimeout(() => {
                             const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
-                            const nextPrompt = this.generateConsensusPrompt(nextProvider, response);
+                            const nextPrompt = this.generateNextPrompt(nextProvider, response);
                             this.sendMessage(nextProvider, nextPrompt);
-                        }, 3000); // 3秒待機
-                    } else if (this.messageCount >= 200) {
-                        this.addMessage('system', '⚠️ 安全装置により対話を終了します（最大100往復に達しました）');
-                        this.stopDialogue();
+                        }, 2000); // 2秒待機
                     }
 
                 } catch (error) {
@@ -591,33 +525,6 @@
                     this.showError(`エラーが発生しました: ${error.message}`);
                     console.error('API Error:', error);
                 }
-            }
-
-            detectConsensus(message1, message2) {
-                const consensusPatterns = [
-                    /完全に同意|全く同感|完璧な結論|最終的な結論/,
-                    /結論に達し|合意に達し|一致している|共通の理解/,
-                    /同じ見解|完全な合意|最終的に合意|結論として/
-                ];
-                
-                return consensusPatterns.some(pattern => 
-                    pattern.test(message1) && pattern.test(message2)
-                );
-            }
-
-            generateConsensusPrompt(provider, previousMessage) {
-                const otherProvider = provider === 'openai' ? 'Gemini' : 'ChatGPT';
-                return `${otherProvider}が以下のように述べました：
-
-"${previousMessage}"
-
-これに対して詳細にあなたの見解を述べてください：
-
-- 完全に同意できる場合：「完全に同意します」と明示し、共通の結論を詳しくまとめてください
-- 部分的に同意の場合：同意する部分と追加の観点を具体的に説明してください  
-- 異なる見解の場合：建設的な反論と代替案を論理的に提示してください
-
-最終的な合意を目指して、できるだけ詳しく、かつ論理的に説明してください。途中で文章が切れないよう、完全な論述をお願いします。`;
             }
 
             async callOpenAI(prompt) {
@@ -631,8 +538,8 @@
                     body: JSON.stringify({
                         model: 'gpt-3.5-turbo',
                         messages: [{ role: 'user', content: prompt }],
-                        max_tokens: 600, // より長い応答
-                        temperature: 0.8 // より創造的
+                        max_tokens: 300,
+                        temperature: 0.7
                     })
                 });
 
@@ -671,8 +578,8 @@
                                     }]
                                 }],
                                 generationConfig: {
-                                    maxOutputTokens: 600, // より長い応答
-                                    temperature: 0.8 // より創造的
+                                    maxOutputTokens: 300,
+                                    temperature: 0.7
                                 },
                                 safetySettings: [
                                     {
@@ -721,17 +628,22 @@
             generateFallbackResponse(prompt) {
                 // Gemini APIが失敗した場合の代替応答
                 const responses = [
-                    "ChatGPTさんの見解は非常に興味深いものです。私の観点から補足すると、この問題には技術的側面と人文学的側面の両方から検討する必要があると考えます。特にデータの客観性と人間の創造性のバランスについて、より具体的な検証が必要だと思います。あなたの提案について、実装面での詳細をお聞かせいただけますでしょうか？",
+                    "興味深い観点ですね。私は Google の AI として、データに基づいた分析を重視します。あなたが提起された点について、より具体的なデータや事例があれば、さらに深い議論ができると思います。どのような実証的な根拠をお持ちでしょうか？",
                     
-                    "その創造的なアプローチには一定の価値があると認識しています。Google AIとしては、より実証的なデータに基づいた分析を重視したいと思います。最近の研究動向を見ると、理論と実践の統合が重要な課題となっています。ChatGPTさんの理論的枠組みを、具体的な応用例で検証してみることはいかがでしょうか？",
+                    "その視点は重要だと思います。Google の検索データから見ると、この分野では多様なアプローチが試されています。特に最近の研究動向を見ると、技術的な解決策と人文学的なアプローチの融合が求められているようです。",
                     
-                    "ChatGPTさんの論点は理解できますが、私はより包括的な視点から検討したいと思います。技術の発展と社会への影響を考慮すると、倫理的な配慮も不可欠です。また、グローバルな視点での検証も必要でしょう。この議論をさらに建設的に進めるために、具体的な事例研究を含めて検討してはいかがでしょうか？",
+                    "なるほど、そうした創造的なアプローチは確かに価値がありますね。私としては、それを支える技術インフラや、スケーラビリティの観点からも検討が必要だと考えます。実装面での課題についてはいかがお考えでしょうか？",
                     
-                    "興味深い観点をお示しいただきありがとうございます。Googleの検索データから見ると、この分野では多様なアプローチが試されており、単一の解決策だけでは不十分かもしれません。ChatGPTさんの提案を基に、さらに多角的な分析を行い、より堅牢な結論に到達したいと思います。どのような追加的な検証が有効だとお考えでしょうか？"
+                    "ChatGPTさんの創造性重視のアプローチは理解できます。一方で、私は事実確認と検証可能性を重視したいと思います。この議論をより建設的にするために、具体的な事例や研究結果を参照しながら進めてはいかがでしょうか？"
                 ];
                 
                 return responses[Math.floor(Math.random() * responses.length)] + 
                        "\n\n※現在Gemini APIに技術的制約があるため、代替応答を表示しています。";
+            }
+
+            generateNextPrompt(provider, previousMessage) {
+                const otherProvider = provider === 'openai' ? 'Gemini' : 'ChatGPT';
+                return `${otherProvider}が以下のように述べました：\n\n"${previousMessage}"\n\nこれに対してあなたの見解を述べ、さらに議論を深めるための質問や観点を提示してください。`;
             }
 
             addMessage(provider, content, isThinking = false) {
@@ -784,9 +696,7 @@
                 this.isRunning = false;
                 this.elements.startBtn.disabled = false;
                 this.elements.stopBtn.disabled = true;
-                if (!this.consensusReached) {
-                    this.addMessage('system', '対話を手動停止しました。');
-                }
+                this.addMessage('system', '対話を停止しました。');
             }
 
             clearChat() {
@@ -795,11 +705,86 @@
                 this.openaiCount = 0;
                 this.geminiCount = 0;
                 this.conversationHistory = [];
-                this.consensusReached = false;
-                this.elements.consensusIndicator.classList.remove('show');
                 this.updateStats();
                 this.showWelcomeMessage();
                 this.hideError();
+            }
+
+            generateSummaryPrompt() {
+                const topic = this.elements.topicInput.value.trim();
+                const chatMessages = this.elements.chatContainer.querySelectorAll('.message:not(.system-message)');
+                
+                if (chatMessages.length === 0) {
+                    this.showError('対話ログがありません。まず対話を開始してください。');
+                    return;
+                }
+
+                let conversationLog = '';
+                chatMessages.forEach((message, index) => {
+                    const header = message.querySelector('.message-header').textContent.trim();
+                    const content = message.querySelector('div:not(.message-header)').textContent.trim();
+                    const speaker = header.includes('ChatGPT') ? 'ChatGPT' : 'Gemini';
+                    const time = header.split(' ').pop();
+                    
+                    conversationLog += `${speaker} ${time}\n${content}\n\n`;
+                });
+
+                const summaryPrompt = `以下の対話ログを読み込んで、「${topic}」についての議論を、読みやすい文章として章立てして整理してください。
+
+【要求事項】
+1. **章立て構成**で整理（序章・第1章・第2章...・結論）
+2. **要点を3-4行程度**で簡潔にまとめる
+3. **専門用語には簡単な説明**を併記
+4. **対話で出た具体的な解決策**を整理
+5. **全体で5000-6000文字程度**に収める
+
+【対話ログ】
+${conversationLog}
+
+【出力形式】
+# ${topic}の検討結果
+
+## 序章：問題設定
+[ここに対話の背景と目的を記載]
+
+## 第1章：主要な論点
+[ここに議論の核心部分を整理]
+
+## 第2章：課題と対策
+[ここに問題点と解決策を整理]
+
+## 第3章：具体的施策
+[ここに実装可能な具体案を整理]
+
+## 結論：推奨される方向性
+[ここに最終的な推奨事項を記載]
+
+**注意：AI同士の対話特有の冗長性を排除し、実務で使える内容に焦点を当ててください。**`;
+
+                // クリップボードにコピー
+                navigator.clipboard.writeText(summaryPrompt).then(() => {
+                    this.addMessage('system', 
+                        '📋 Gemini用要約プロンプトをクリップボードにコピーしました！\n\n' +
+                        '以下の手順で使用してください：\n' +
+                        '1. Geminiを開く\n' +
+                        '2. クリップボードの内容を貼り付け\n' +
+                        '3. 送信して要約を生成\n\n' +
+                        'プロンプトの文字数: ' + summaryPrompt.length + '文字'
+                    );
+                }).catch(err => {
+                    console.error('クリップボードへのコピーに失敗:', err);
+                    // フォールバック：テキストエリアに表示
+                    const summaryWindow = window.open('', '_blank');
+                    summaryWindow.document.write(`
+                        <html>
+                            <head><title>Gemini用要約プロンプト</title></head>
+                            <body>
+                                <h2>以下をコピーしてGeminiに貼り付けてください：</h2>
+                                <textarea style="width:100%;height:80vh;">${summaryPrompt}</textarea>
+                            </body>
+                        </html>
+                    `);
+                });
             }
 
             showError(message) {
