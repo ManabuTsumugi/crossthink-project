@@ -476,7 +476,9 @@
                 this.startTimer();
 
                 // 最初のメッセージをOpenAIから開始
-                await this.sendMessage('openai', `${topic}について、Geminiと深い対話をしてください。最初にあなたの見解を述べて、Geminiに質問を投げかけてください。`);
+                await this.sendMessage('openai', `あなたは知的議論を愛する研究者です。「${topic}」について、建設的で友好的な学術的議論を行ってください。相手の意見を尊重し、新たな視点を求めながら対話を深めてください。
+
+重要：結論を急がず、思考を深め続けることを重視してください。まず、あなたの研究者としての見解を述べて、相手に質問を投げかけてください。`);
             }
 
             validateInputs() {
@@ -624,7 +626,7 @@
                     this.updateStats();
 
                     // 次のAIに応答させる
-                    if (this.isRunning && this.messageCount < 100) {
+                    if (this.isRunning && this.messageCount < 20) {
                         setTimeout(() => {
                             const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
                             const nextPrompt = this.generateNextPrompt(nextProvider, response || 'フォールバック応答');
@@ -656,7 +658,7 @@
                         model: 'gpt-3.5-turbo',
                         messages: [{ role: 'user', content: prompt }],
                         max_tokens: 1000,
-                        temperature: 0.7
+                        temperature: 0.8
                     })
                 });
 
@@ -701,7 +703,7 @@
                                 }],
                                 generationConfig: {
                                     maxOutputTokens: 1000,
-                                    temperature: 0.7
+                                    temperature: 0.8
                                 },
                                 safetySettings: [
                                     {
@@ -770,7 +772,15 @@
 
             generateNextPrompt(provider, previousMessage) {
                 const otherProvider = provider === 'openai' ? 'Gemini' : 'ChatGPT';
-                return `${otherProvider}が以下のように述べました：\n\n"${previousMessage}"\n\nこれに対してあなたの見解を述べ、さらに議論を深めるための質問や観点を提示してください。`;
+                const currentProvider = provider === 'openai' ? 'ChatGPT' : 'Gemini';
+                
+                return `あなたは知的議論を愛する研究者です。${otherProvider}が以下のように述べました：
+
+"${previousMessage}"
+
+これに対して、建設的で友好的な学術的議論を継続してください。相手の洞察を認めつつ、あなたの研究者としての視点を述べ、さらに議論を深めるための質問や新たな観点を提示してください。
+
+重要：結論を急がず、思考を深め続けることを重視してください。異なる視点を探求し、新たな問いを発見することが目的です。お互いの知見を尊重し合いながら、継続的な探求の姿勢で対話を進めてください。`;
             }
 
             addMessage(provider, content, isThinking = false) {
