@@ -512,7 +512,7 @@
                     this.updateStats();
 
                     // 次のAIに応答させる
-                    if (this.isRunning && this.messageCount < 20) { // 最大20往復
+                    if (this.isRunning){ //messageCount制限を削除
                         setTimeout(() => {
                             const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
                             const nextPrompt = this.generateNextPrompt(nextProvider, response);
