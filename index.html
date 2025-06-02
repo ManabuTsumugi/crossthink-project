@@ -766,4 +766,75 @@
                 `;
 
                 this.elements.chatContainer.appendChild(messageDiv);
-                this.elements.chatContainer.scrollTop = this.elements
+                this.elements.chatContainer.scrollTop = this.elements.chatContainer.scrollHeight;
+
+                if (!isThinking && provider !== 'system') {
+                    this.messageCount++;
+                }
+            }
+
+            removeLastMessage() {
+                const messages = this.elements.chatContainer.querySelectorAll('.message');
+                if (messages.length > 0) {
+                    messages[messages.length - 1].remove();
+                }
+            }
+
+            stopDialogue() {
+                this.isRunning = false;
+                this.elements.startBtn.disabled = false;
+                this.elements.stopBtn.disabled = true;
+                if (!this.consensusReached) {
+                    this.addMessage('system', '対話を手動停止しました。');
+                }
+            }
+
+            clearChat() {
+                this.elements.chatContainer.innerHTML = '';
+                this.messageCount = 0;
+                this.openaiCount = 0;
+                this.geminiCount = 0;
+                this.conversationHistory = [];
+                this.consensusReached = false;
+                this.elements.consensusIndicator.classList.remove('show');
+                this.updateStats();
+                this.showWelcomeMessage();
+                this.hideError();
+            }
+
+            showError(message) {
+                this.elements.errorDisplay.textContent = `❌ エラー: ${message}`;
+                this.elements.errorDisplay.style.display = 'block';
+            }
+
+            hideError() {
+                this.elements.errorDisplay.style.display = 'none';
+            }
+
+            updateStats() {
+                this.elements.totalMessages.textContent = this.messageCount;
+                this.elements.openaiMessages.textContent = this.openaiCount;
+                this.elements.geminiMessages.textContent = this.geminiCount;
+            }
+
+            startTimer() {
+                const updateTimer = () => {
+                    if (this.startTime) {
+                        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                        this.elements.elapsed.textContent = elapsed;
+                    }
+                    if (this.isRunning) {
+                        setTimeout(updateTimer, 1000);
+                    }
+                };
+                updateTimer();
+            }
+        }
+
+        // システム初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            new AIDialogueSystem();
+        });
+    </script>
+</body>
+</html>
