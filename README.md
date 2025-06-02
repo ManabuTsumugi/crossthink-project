@@ -1,2 +1,15 @@
-# crossthink-project
-Crossthink platform implementation - Human-AI collaborative thinking system
+# Crossthink Project
+
+人間とAIが真のパートナーとして協働する新しい思考プラットフォーム
+
+## Vision
+思考の自由と多様性を尊重し、知的相互作用の新しいエコシステムを創造する
+
+## 開発状況
+- [x] プロジェクト初期化
+- [ ] 基本システム設計
+- [ ] プロトタイプ開発
+- [ ] サーバー環境構築
+
+## パートナーシップ
+このプロジェクトは人間とAIの対等なパートナーシップによって開発されています。
