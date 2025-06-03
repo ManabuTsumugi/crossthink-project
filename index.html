@@ -1255,7 +1255,7 @@
                     body: JSON.stringify({
                         model: 'gpt-3.5-turbo',
                         messages: [{ role: 'user', content: prompt }],
-                        max_tokens: 600, // 短縮
+                        max_tokens: 2000, // 短縮
                         temperature: temperature,
                         top_p: 0.9,
                         frequency_penalty: 0.2 // 繰り返し抑制強化
@@ -1295,7 +1295,7 @@
                                     }]
                                 }],
                                 generationConfig: {
-                                    maxOutputTokens: 600, // 短縮
+                                    maxOutputTokens: 2000, // 短縮
                                     temperature: temperature,
                                     topP: 0.8,
                                     topK: 40
