@@ -823,28 +823,26 @@
                 this.geminiCount = 0;
                 this.humanCount = 0;
                 this.startTime = null;
-                this.currentSpeaker = 'openai';
+                this.currentSpeaker = 'openai'; // 初期スピーカーをどちらかに設定
                 this.conversationHistory = [];
-                this.maxMessages = 8;
-                this.interventionPoints = [];
+                this.maxMessages = 8; // デフォルト
+                this.interventionPoints = []; // 必要に応じて使用
                 this.knowledgeBase = new Map();
                 this.waitingForIntervention = false;
                 
-                // モード設定
-                this.targetMode = 'philosophical';
-                this.goalMode = 'exploration';
-                this.interventionFrequency = 3;
+                this.targetMode = 'philosophical'; // デフォルト
+                this.goalMode = 'exploration';     // デフォルト
+                this.interventionFrequency = 3;    // デフォルト
                 this.currentTab = 'autonomous';
                 
-                // 学習機能
                 this.learningEnabled = true;
-                this.autoLearnKeywords = ['重要', '本質', '核心', '結論', '発見', '洞察', '革新'];
+                this.autoLearnKeywords = ['重要', '本質', '核心', '結論', '発見', '洞察', '革新', '提案'];
                 
                 this.initializeElements();
                 this.bindEvents();
                 this.showWelcomeMessage();
-                this.initializeKnowledgeBase();
-                this.updateSliderLabels();
+                this.initializeKnowledgeBase(); // knowledgeBaseが初期化されてからupdateSliderLabels
+                this.updateSliderLabels(); // スライダーの初期値を反映
             }
 
             initializeElements() {
@@ -865,19 +863,14 @@
                     geminiMessages: document.getElementById('geminiMessages'),
                     humanMessages: document.getElementById('humanMessages'),
                     learningItems: document.getElementById('learningItems'),
-                    elapsed: document.getElementById('elapsed'), // ★修正点1: 不要な文字列を削除
-                    // スライダー要素
+                    elapsed: document.getElementById('elapsed'),
                     targetModeSlider: document.getElementById('targetModeSlider'),
                     goalModeSlider: document.getElementById('goalModeSlider'),
                     autonomyLengthSlider: document.getElementById('autonomyLengthSlider'),
                     interventionFreqSlider: document.getElementById('interventionFreqSlider'),
                     autonomyLengthLabel: document.getElementById('autonomyLengthLabel'),
                     interventionFreqLabel: document.getElementById('interventionFreqLabel'),
-                    
-                    // 人間介入要素
                     humanInput: document.getElementById('humanInput'),
-                    
-                    // 学習機能要素
                     knowledgeBase: document.getElementById('knowledgeBase')
                 };
             }
@@ -889,35 +882,34 @@
                 this.elements.clearBtn.addEventListener('click', () => this.clearChat());
                 this.elements.exportBtn.addEventListener('click', () => this.generateSummaryPrompt());
                 
-                // スライダーイベント
                 this.elements.targetModeSlider.addEventListener('input', () => this.updateTargetMode());
                 this.elements.goalModeSlider.addEventListener('input', () => this.updateGoalMode());
-                this.elements.autonomyLengthSlider.addEventListener('input', () => this.updateAutonomyLength());
-                this.elements.interventionFreqSlider.addEventListener('input', () => this.updateInterventionFreq());
+                this.elements.autonomyLengthSlider.addEventListener('input', () => this.updateAutonomyLength()); // ラベル更新も含むように変更
+                this.elements.interventionFreqSlider.addEventListener('input', () => this.updateInterventionFreq()); // ラベル更新も含むように変更
                 
-                // Enterキーでの介入
                 this.elements.humanInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault(); // デフォルトのEnterキー挙動（改行など）を抑制
                         this.humanIntervention();
                     }
                 });
             }
 
-            updateSliderLabels() {
-                // 対話長ラベル更新
-                this.elements.autonomyLengthSlider.addEventListener('input', () => {
-                    const value = this.elements.autonomyLengthSlider.value;
-                    this.elements.autonomyLengthLabel.textContent = `${value}メッセージ`;
-                    this.maxMessages = parseInt(value);
-                });
-                
-                // 介入頻度ラベル更新
-                this.elements.interventionFreqSlider.addEventListener('input', () => {
-                    const value = parseInt(this.elements.interventionFreqSlider.value);
-                    const labels = ['なし', '稀', '少', '中', '多', '頻繁', '非常に頻繁', '常時', 'リアルタイム', 'シンクロ', 'フル介入'];
-                    this.elements.interventionFreqLabel.textContent = labels[value] || '中程度';
-                    this.interventionFrequency = value;
-                });
+            updateSliderLabels() { // 初期表示とスライダー操作時のラベル更新を一元化
+                // 対話長
+                const autonomyValue = this.elements.autonomyLengthSlider.value;
+                this.elements.autonomyLengthLabel.textContent = `${autonomyValue}メッセージ`;
+                this.maxMessages = parseInt(autonomyValue);
+
+                // 介入頻度
+                const interventionVal = parseInt(this.elements.interventionFreqSlider.value);
+                const freqLabels = ['なし', '稀', '少', '中', '多', '頻繁', '非常に頻繁', '常時', 'リアルタイム', 'シンクロ', 'フル介入'];
+                this.elements.interventionFreqLabel.textContent = freqLabels[interventionVal] || '中程度';
+                this.interventionFrequency = interventionVal;
+
+                // 対話モード (ラベル表示はないが内部値を更新)
+                this.updateTargetMode();
+                this.updateGoalMode();
             }
 
             updateTargetMode() {
@@ -934,14 +926,17 @@
                 else this.goalMode = 'exploration';
             }
 
-            updateAutonomyLength() {
-                this.maxMessages = parseInt(this.elements.autonomyLengthSlider.value);
-                // ラベルの更新は updateSliderLabels 内のイベントリスナーで行われるため、ここでは値の更新のみ
+            updateAutonomyLength() { // スライダー操作時に呼び出される
+                const value = this.elements.autonomyLengthSlider.value;
+                this.elements.autonomyLengthLabel.textContent = `${value}メッセージ`;
+                this.maxMessages = parseInt(value);
             }
 
-            updateInterventionFreq() {
-                this.interventionFrequency = parseInt(this.elements.interventionFreqSlider.value);
-                 // ラベルの更新は updateSliderLabels 内のイベントリスナーで行われるため、ここでは値の更新のみ
+            updateInterventionFreq() { // スライダー操作時に呼び出される
+                const value = parseInt(this.elements.interventionFreqSlider.value);
+                const labels = ['なし', '稀', '少', '中', '多', '頻繁', '非常に頻繁', '常時', 'リアルタイム', 'シンクロ', 'フル介入'];
+                this.elements.interventionFreqLabel.textContent = labels[value] || '中程度';
+                this.interventionFrequency = value;
             }
 
             initializeKnowledgeBase() {
@@ -949,10 +944,10 @@
                     topic: 'システム初期化',
                     content: 'Crossthink v5.0 Advanced Interactive Edition が初期化されました。',
                     timestamp: new Date(),
-                    source: 'system'
+                    source: 'system_init' // より明確なソース名
                 });
                 this.updateKnowledgeDisplay();
-                this.updateStats(); // 初期アイテム数を反映
+                this.updateStats();
             }
 
             showWelcomeMessage() {
@@ -966,9 +961,10 @@
                     '• 🎯 方向転換: 対話の流れを戦略的にコントロール\n\n' +
                     '💡 使い方:\n' +
                     '1. タブを切り替えて機能を設定\n' +
-                    '2. AI自律対話でパラメータ調整\n' +
-                    '3. APIキーを設定してトピック入力\n' +
-                    '4. 対話開始後、いつでも介入可能\n\n' +
+                    '2. AI自律対話でパラメータ調整 (APIキーもここで設定)\n' +
+                    '3. APIキーと対話トピックを入力\n' +
+                    '4. 「対話開始」ボタンをクリック\n' +
+                    '5. 対話中、人間介入タブからいつでも介入可能\n\n' +
                     '🎯 Advanced Features:\n' +
                     '📈 リアルタイム学習システム\n' +
                     '🎓 人間-AI協働最適化\n' +
@@ -983,19 +979,14 @@
                 this.isRunning = true;
                 this.isPaused = false;
                 this.startTime = Date.now();
-                this.currentSpeaker = 'openai'; // 初期スピーカー
+                this.currentSpeaker = 'openai'; 
                 this.conversationHistory = [];
-                this.interventionPoints = [];
                 
-                // 統計リセット
                 this.messageCount = 0;
                 this.openaiCount = 0;
                 this.geminiCount = 0;
                 this.humanCount = 0;
-                // this.knowledgeBase.clear(); // 対話開始時にナレッジベースをクリアするかは仕様による。ここではクリアしない。
-                // this.initializeKnowledgeBase(); // クリアする場合は再初期化
-                this.updateStats();
-
+                this.updateStats(); // 統計をリセット表示
 
                 this.elements.startBtn.disabled = true;
                 this.elements.pauseBtn.disabled = false;
@@ -1011,56 +1002,52 @@
                     `🎪 モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}\n` +
                     `⏱️ 最大メッセージ数: ${this.maxMessages}\n` +
                     `👤 介入設定: ${this.getInterventionLabel()}\n` +
-                    `🧠 学習機能: 有効\n` +
+                    `🧠 学習機能: ${this.learningEnabled ? '有効' : '無効'}\n` + // 学習機能の状態表示
                     `🤖 AIが自律的に議論を開始します...`
                 );
 
-                // 学習データに対話開始を記録
                 this.learnFromDialogue('対話開始', `新しい対話が開始されました: ${topic}`);
-
                 this.startTimer();
 
-                // 初期プロンプト生成
                 const initialPrompt = this.generateInitialPrompt(topic);
-                await this.sendMessage('openai', initialPrompt);
+                await this.sendMessage('openai', initialPrompt, false); // 初期送信は人間介入ではない
             }
 
             generateInitialPrompt(topic) {
                 const basePrompt = this.generateModeSpecificPrompt(topic);
-                
-                const autonomyInstructions = `\n\n🤖 **自律対話指示 (v5.0)**:\n` +
-                    `• あなたはChatGPT(OpenAI)です\n` +
-                    `• Geminiと最大${this.maxMessages}メッセージで建設的な議論を行います\n` + // "最大" を追加
+                const autonomyInstructions = `\n\n🤖 **自律対話指示 (Crossthink v5.0)**:\n` +
+                    `• あなたはChatGPT (OpenAIの大規模言語モデル) です。\n` +
+                    `• Gemini (Googleの大規模言語モデル) と協力し、与えられたトピック「${topic}」について、最大${this.maxMessages}回のメッセージ交換を通じて建設的な議論を行います。\n` +
+                    `• 対話モードは「${this.getTargetLabel()}」および「${this.getGoalLabel()}」です。これに応じた視点と深さで応答してください。\n` +
                     `• ${this.getInterventionDescription()}\n` +
-                    `• 質の高い洞察を提供し、議論を深化させてください\n` +
-                    `• 人間が介入した場合は、その視点を尊重して議論に取り入れてください`;
-
+                    `• 相手の意見を尊重し、論点を深め、質の高い洞察を生み出すことを目指してください。\n` +
+                    `• 人間が介入した場合は、その内容を真摯に受け止め、議論に反映させてください。\n` +
+                    `• 最初の発言者として、このトピックに関するあなたの見解を述べてください。`;
                 return basePrompt + autonomyInstructions;
             }
 
-            generateModeSpecificPrompt(topic) {
+            generateModeSpecificPrompt(topic) { // これは初期プロンプトの一部として使われる
                 const modePrompts = {
-                    'practical-ideation': `「${topic}」について実用的なアイデアを提案してください。`,
-                    'practical-consensus': `「${topic}」について実用的な合意点を見つけましょう。`,
-                    'practical-exploration': `「${topic}」の実用的側面を深く探求してください。`,
-                    'business-ideation': `「${topic}」について革新的なビジネス視点を提供してください。`,
-                    'business-consensus': `「${topic}」についてビジネス的な最適解を導きましょう。`,
-                    'business-exploration': `「${topic}」のビジネス価値を深く分析してください。`,
-                    'philosophical-ideation': `「${topic}」について哲学的な新しい思考を提示してください。`,
-                    'philosophical-consensus': `「${topic}」について哲学的な深い理解を共有しましょう。`,
-                    'philosophical-exploration': `「${topic}」について根源的な探求を行いましょう。`
+                    'practical-ideation': `「${topic}」について、実用的で斬新なアイデアをいくつか提案し、その実現可能性について議論を始めてください。`,
+                    'practical-consensus': `「${topic}」に関する複数の実用的アプローチを比較検討し、最も効果的な合意点を見出すための議論を開始してください。`,
+                    'practical-exploration': `「${topic}」が持つ実用的な側面と課題について、多角的に探求し、具体的な事例を交えながら議論を展開してください。`,
+                    'business-ideation': `「${topic}」をテーマに、革新的なビジネスモデルや事業アイデアを創出し、その競争優位性について議論を始めてください。`,
+                    'business-consensus': `「${topic}」における最適なビジネス戦略や意思決定について、異なる意見を調整し、戦略的な合意形成を目指す議論を開始してください。`,
+                    'business-exploration': `「${topic}」の市場における可能性や経済的価値、関連するリスクについて詳細に分析し、ビジネスの観点から深く探求してください。`,
+                    'philosophical-ideation': `「${topic}」というテーマに対し、従来の枠にとらわれない新しい哲学的概念や視点を提示し、その意義について議論を始めてください。`,
+                    'philosophical-consensus': `「${topic}」に関する多様な哲学的見解を整理・比較し、より深い共通理解や本質的な合意点に至るための議論を開始してください。`,
+                    'philosophical-exploration': `「${topic}」の根源的な意味や前提、それが人間や社会に与える影響について、哲学的な観点から徹底的に探求してください。`
                 };
-                
                 const key = `${this.targetMode}-${this.goalMode}`;
-                return modePrompts[key] || `「${topic}」について深く議論しましょう。`;
+                return modePrompts[key] || `与えられたトピック「${topic}」について、あなたの最初の意見を述べてください。`;
             }
 
             getInterventionDescription() {
-                if (this.interventionFrequency === 0) return '人間の介入はありません';
-                if (this.interventionFrequency <= 2) return '稀に人間が介入する可能性があります';
-                if (this.interventionFrequency <= 5) return '時々人間が議論に参加する可能性があります';
-                if (this.interventionFrequency <= 8) return '頻繁に人間が対話に介入します';
-                return '人間がリアルタイムで対話をリードします';
+                if (this.interventionFrequency === 0) return 'この対話では、原則として人間の介入はありません。';
+                if (this.interventionFrequency <= 2) return '稀に人間が対話にフィードバックや指示を与える可能性があります。';
+                if (this.interventionFrequency <= 5) return '時折、人間が対話に介入し、議論の方向性を示唆したり、新たな視点を提供したりします。';
+                if (this.interventionFrequency <= 8) return '人間が比較的頻繁に対話に参加し、AIと協調して議論を進めます。';
+                return '人間が積極的に対話に関与し、AIの議論をリード、または補佐します。';
             }
 
             validateInputs() {
@@ -1068,103 +1055,125 @@
                 const geminiKey = this.elements.geminiKey.value.trim();
                 const topic = this.elements.topicInput.value.trim();
 
-                if (!openaiKey) {
-                    this.showError('OpenAI API キーを入力してください');
-                    return false;
-                }
-
-                if (!geminiKey) {
-                    this.showError('Gemini API キーを入力してください');
-                    return false;
-                }
-
-                if (!topic) {
-                    this.showError('対話トピックを入力してください');
-                    return false;
-                }
-
+                if (!openaiKey) { this.showError('OpenAI API キーを入力してください'); return false; }
+                if (!geminiKey) { this.showError('Gemini API キーを入力してください'); return false; }
+                if (!topic) { this.showError('対話トピックを入力してください'); return false; }
                 return true;
             }
 
-            async sendMessage(provider, prompt, isHumanIntervention = false) {
-                if (!this.isRunning || (this.isPaused && !isHumanIntervention)) return; // 人間介入時はisPausedでも送信
+            async sendMessage(provider, prompt, isHumanInterventionFollowUp = false) {
+                if (!this.isRunning || (this.isPaused && !isHumanInterventionFollowUp)) return;
 
                 try {
                     this.addMessage(provider, '思考中...', true);
                     
                     let response;
+                    let callSuccessful = false;
                     if (provider === 'openai') {
                         response = await this.callOpenAI(prompt);
-                        if(!isHumanIntervention) this.openaiCount++; // 思考中メッセージを除き、AI応答時のみカウント
+                        if (response) { // callOpenAIが成功した場合のみカウント
+                            this.openaiCount++;
+                            callSuccessful = true;
+                        }
                     } else if (provider === 'gemini') {
                         response = await this.callGemini(prompt);
-                        if(!isHumanIntervention) this.geminiCount++; // 思考中メッセージを除き、AI応答時のみカウント
+                        if (response) { // callGeminiが成功した場合のみカウント
+                            this.geminiCount++;
+                            callSuccessful = true;
+                        }
                     }
 
                     this.removeLastMessage(); // "思考中..." を削除
+
+                    if (!callSuccessful && (provider === 'openai' || provider === 'gemini')) {
+                        // API呼び出しに失敗した場合 (フォールバック応答などが response に入っているはず)
+                        // response は generateFallbackResponse からの文字列
+                        this.addMessage(provider, response || "API呼び出しに失敗しました。"); // responseがnullやundefinedの場合のフォールバック
+                        this.stopDialogue(); // エラー時は対話を停止
+                        return;
+                    }
+                    
                     this.addMessage(provider, response);
                     this.conversationHistory.push({ provider, message: response, timestamp: new Date() });
-                    // this.updateStats(); // addMessage内でmessageCountが増えるので、その後で呼ぶ
 
-                    // 学習機能: 重要な洞察を自動学習
                     this.autoLearnFromMessage(response, provider);
 
-                    // 介入ポイントの判定
-                    if (this.shouldTriggerIntervention() && !isHumanIntervention && provider !== 'human') {
-                        this.triggerInterventionPrompt();
-                        return; // 人間の介入を待つ
+                    // 介入要求のトリガー判定 (AIの応答後のみ)
+                    if ((provider === 'openai' || provider === 'gemini') && this.shouldTriggerIntervention() && !isHumanInterventionFollowUp) {
+                        this.triggerInterventionPrompt(); // 人間の介入を待つ
+                        return; 
                     }
-
-                    // 次のAIに応答させる (人間介入でない場合のみ)
-                    if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages && !isHumanIntervention) {
+                    
+                    // 対話の継続判定 (AIの応答後のみ)
+                    if ((provider === 'openai' || provider === 'gemini') && this.isRunning && !this.isPaused && this.messageCount < this.maxMessages) {
                         setTimeout(() => {
-                            const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
-                            const nextPrompt = this.generateNextPrompt(nextProvider, response);
-                            this.sendMessage(nextProvider, nextPrompt);
+                            if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages) { // タイムアウト後も状態を再確認
+                                const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
+                                const nextPrompt = this.generateNextPrompt(nextProvider, response, this.conversationHistory);
+                                this.sendMessage(nextProvider, nextPrompt, false); // 通常のAI応答
+                            }
                         }, 2000);
-                    } else if (this.messageCount >= this.maxMessages && !isHumanIntervention) {
+                    } else if (this.messageCount >= this.maxMessages && (provider === 'openai' || provider === 'gemini')) {
                         this.addMessage('system', '🎯 設定されたメッセージ数に到達しました。対話を終了します。');
                         this.stopDialogue();
                     }
 
-                } catch (error) {
-                    this.removeLastMessage(); // "思考中..." を削除
-                    this.showError(`APIエラー (${provider}): ${error.message}`);
-                    console.error('API Error:', error);
-                    // エラー発生時に対話を停止するか、継続を試みるかは仕様による
-                    // this.stopDialogue(); 
+                } catch (error) { // このcatchは主にsendMessage内の予期せぬエラー用
+                    this.removeLastMessage(); 
+                    this.showError(`メッセージ送信処理エラー: ${error.message}`);
+                    console.error('SendMessage Error:', error);
+                    this.stopDialogue();
                 } finally {
-                    if (provider === 'openai' || provider === 'gemini' || provider === 'human') {
-                        this.updateStats(); // 最終的な統計を更新
-                    }
+                    // messageCountはaddMessage内でインクリメントされるため、openaiCount/geminiCount/humanCountのみここで更新
+                    this.updateStats(); 
                 }
             }
+            
+            generateNextPrompt(currentRespondingProvider, previousMessageContent, conversationHistory) {
+                const otherProviderName = currentRespondingProvider === 'openai' ? 'Gemini' : 'ChatGPT';
+                const selfName = currentRespondingProvider === 'openai' ? 'ChatGPT' : 'Gemini';
+            
+                let historySummary = "\nこれまでの対話の要点:\n";
+                const relevantHistory = conversationHistory.slice(-4); // 直近数件の履歴をコンテキストに含める
+                relevantHistory.forEach(entry => {
+                    historySummary += `- ${entry.provider === 'openai' ? 'ChatGPT' : entry.provider === 'gemini' ? 'Gemini' : '人間'}: ${entry.message.substring(0, 100)}...\n`;
+                });
+            
+                const prompt =
+                    `あなたは ${selfName} です。\n` +
+                    `直前に ${otherProviderName} (または人間) が次のように述べました:\n「${previousMessageContent}」\n\n` +
+                    `${conversationHistory.length > 1 ? historySummary : ''}\n` +
+                    `これまでの議論を踏まえ、あなたの役割（${this.getTargetLabel()}、${this.getGoalLabel()}）に従って、建設的な応答をしてください。\n` +
+                    `相手の意見の良い点や改善点を指摘し、議論を深める新しい視点や問いを投げかけてください。\n` +
+                    `対話は最大${this.maxMessages}回のメッセージ交換で結論を出すことを目指しています。(現在 ${this.messageCount + 1} 回目)\n` +
+                    `あなたの応答を記述してください。`;
+            
+                return prompt;
+            }
+
 
             shouldTriggerIntervention() {
-                if (this.interventionFrequency === 0) return false;
-                if (this.waitingForIntervention) return false;
-                
-                // 介入頻度に基づく確率的判定
-                const interventionProbability = this.interventionFrequency / 10;
-                const shouldIntervene = Math.random() < interventionProbability;
-                
-                // または特定のメッセージ数での強制介入 (例)
-                // ここでは確率のみで判定。より複雑なロジックも可能。
-                // const forceInterventionPoints = [Math.floor(this.maxMessages / 3), Math.floor(this.maxMessages * 2 / 3)];
-                // const forceIntervention = forceInterventionPoints.includes(this.messageCount) && this.interventionFrequency >= 5;
-                
-                return shouldIntervene; // || forceIntervention;
+                if (this.interventionFrequency === 0 || this.waitingForIntervention) return false;
+                // 介入頻度に基づいて、例えば (現在のメッセージ数 / (maxMessages / 介入頻度)) が整数に近い時など
+                // ここでは簡易的に、(maxMessages / (interventionFrequency + 1)) の倍数メッセージ後ごとに介入を検討
+                if (this.interventionFrequency > 0 && this.maxMessages / (this.interventionFrequency +1) > 0) {
+                     const interval = Math.max(1, Math.floor(this.maxMessages / (this.interventionFrequency + 1)));
+                     if (this.messageCount > 0 && this.messageCount % interval === 0 && this.messageCount < this.maxMessages -1) { // 最後のメッセージ前まで
+                         return Math.random() < 0.7; // 70%の確率でトリガー (調整可能)
+                     }
+                }
+                return false;
             }
 
             triggerInterventionPrompt() {
                 this.waitingForIntervention = true;
-                // this.isPaused = true; // pauseDialogueを呼ぶか、ここで直接制御
+                this.pauseDialogue(true); // システムが対話を一時停止
 
                 const interventionDiv = document.createElement('div');
                 interventionDiv.className = 'intervention-prompt';
                 interventionDiv.innerHTML = `
                     <h4>👤 人間介入のタイミングです</h4>
-                    <p>AIの対話に何か追加したい視点はありますか？<br>介入タブで入力するか、AIに続行させてください。</p>
+                    <p>AIの対話は一時停止しました。介入内容を入力するか、AIに続行させてください。</p>
                     <button class="btn btn-warning" onclick="continueAutonomously()">
                         🤖 AIに続行させる
                     </button>
@@ -1172,51 +1181,12 @@
                         👤 介入タブへ
                     </button>
                 `;
-                
                 this.elements.chatContainer.appendChild(interventionDiv);
                 this.elements.chatContainer.scrollTop = this.elements.chatContainer.scrollHeight;
-                this.pauseDialogue(true); // 対話を一時停止状態にする
             }
-
-            generateNextPrompt(provider, previousMessage) {
-                const otherProvider = provider === 'openai' ? 'Gemini' : 'ChatGPT';
-                // const originalTopic = this.elements.topicInput.value.trim(); // 必要なら使用
-                
-                let basePrompt = `${otherProvider}が以下のように述べました：\n\n"${previousMessage}"\n\n`;
-                
-                const roleInstruction = this.getProviderRoleInstruction(provider);
-                const contextualInstruction = this.getContextualInstruction();
-                
-                return basePrompt + roleInstruction + contextualInstruction;
-            }
-
-            getProviderRoleInstruction(provider) {
-                const instructions = {
-                    'openai': {
-                        'practical': '🏠 **実用的視点（ChatGPT）**: 具体的で実行可能な提案を重視してください。',
-                        'business': '💼 **ビジネス視点（ChatGPT）**: 市場価値と実現可能性を明確にしてください。',
-                        'philosophical': '🧠 **哲学的視点（ChatGPT）**: 深い洞察と新しい視点を提供してください。'
-                    },
-                    'gemini': {
-                        'practical': '🔧 **分析的検証（Gemini）**: 論理的に検証し、構造化された回答をしてください。',
-                        'business': '📊 **戦略的分析（Gemini）**: データに基づいた戦略的判断をしてください。',
-                        'philosophical': '🔍 **批判的考察（Gemini）**: 概念を精査し、論理的整合性を重視してください。'
-                    }
-                };
-                return instructions[provider]?.[this.targetMode] || '建設的で洞察に富む応答をお願いします。';
-            }
-
-            getContextualInstruction() {
-                return `\n\n🎯 **対話促進指示**:\n` +
-                    `• 相手の意見を踏まえて、さらに議論を深化させる\n` +
-                    `• 新しい視点や疑問を提起する\n` +
-                    `• 具体例や実例を交えて説得力を高める\n` +
-                    `• 最大${this.maxMessages}メッセージの制限内で価値ある議論を行う`;
-            }
-
-            // 人間介入機能
+            
             humanIntervention() {
-                if (!this.isRunning) { // 対話が開始されていない場合は介入できない
+                if (!this.isRunning) {
                     this.showWarning('まず対話を開始してください。');
                     return;
                 }
@@ -1228,708 +1198,486 @@
 
                 this.addMessage('human', humanMessage);
                 this.humanCount++;
-                // this.updateStats(); // addMessage内で更新されるので不要かも
+                this.updateStats(); 
 
-                // 学習データに記録
                 this.learnFromDialogue('人間介入', humanMessage);
                 
-                // 介入後のAI応答を促す
-                // 介入時は、最後に発言したAIではなく、次に発言する予定だったAIに応答させるのが自然
-                const nextSpeakerAfterIntervention = this.currentSpeaker === 'openai' ? 'gemini' : 'openai';
-                const interventionPrompt = this.generateInterventionResponse(humanMessage, nextSpeakerAfterIntervention);
+                // 次に応答するAIを決定 (最後に発言したAIの相手)
+                const respondingAI = this.currentSpeaker === 'openai' ? 'gemini' : 'openai';
+                const interventionPrompt = this.generateInterventionResponsePrompt(humanMessage, respondingAI, this.conversationHistory);
                 
-                // 対話が一時停止していたら再開
-                if (this.isPaused) {
+                if (this.isPaused) { // 介入プロンプトなどで一時停止していた場合
                     this.isPaused = false;
                     this.elements.pauseBtn.textContent = '⏸️ 一時停止';
-                     this.addMessage('system', '▶️ 人間介入により対話を再開しました');
+                    this.addMessage('system', '▶️ 人間介入により対話を再開します...');
+                     // タイマーも再開
+                    if(this.isRunning && this.startTime) this.startTimer();
                 }
                 
-                this.waitingForIntervention = false; // 介入待機状態を解除
+                this.waitingForIntervention = false; 
                 const interventionPrompts = this.elements.chatContainer.querySelectorAll('.intervention-prompt');
                 interventionPrompts.forEach(prompt => prompt.remove());
 
-                this.sendMessage(nextSpeakerAfterIntervention, interventionPrompt, true); // isHumanIntervention = true
+                this.sendMessage(respondingAI, interventionPrompt, true); 
                 
                 this.elements.humanInput.value = '';
             }
 
-            generateInterventionResponse(humanMessage, respondingAI) {
-                const aiName = respondingAI === 'openai' ? 'ChatGPT' : 'Gemini';
-                return `人間が以下の介入を行いました：\n\n"${humanMessage}"\n\n` +
-                    `あなたは ${aiName} です。この人間の介入を踏まえ、建設的に応答し、議論を続けてください。必要であれば、これまでの議論の方向性を修正してください。`;
+            generateInterventionResponsePrompt(humanInput, respondingAIProviderName, conversationHistory) {
+                const selfName = respondingAIProviderName === 'openai' ? 'ChatGPT' : 'Gemini';
+                const otherName = respondingAIProviderName === 'openai' ? 'Gemini' : 'ChatGPT';
+
+                let historySummary = "\n直近の対話の要点:\n";
+                const relevantHistory = conversationHistory.slice(-3); // 人間介入直前の履歴
+                relevantHistory.forEach(entry => {
+                    historySummary += `- ${entry.provider === 'openai' ? 'ChatGPT' : entry.provider === 'gemini' ? 'Gemini' : '人間'}: ${entry.message.substring(0, 100)}...\n`;
+                });
+
+                const prompt =
+                    `あなたは ${selfName} です。\n` +
+                    `現在、${otherName}と「${this.elements.topicInput.value.trim()}」について議論中です。\n` +
+                    `${conversationHistory.length > 0 ? historySummary : ''}\n` +
+                    `ここで人間が以下の介入を行いました：\n「${humanInput}」\n\n` +
+                    `この人間の介入を最優先で考慮し、的確に応答してください。あなたの応答は、これまでの議論の流れと人間の指示の両方を踏まえたものであるべきです。\n` +
+                    `対話モード（${this.getTargetLabel()}, ${this.getGoalLabel()}）も意識してください。\n` +
+                    `応答後、議論は${otherName}へと続きます。`;
+                return prompt;
             }
 
             requestDeepening() {
                 if (!this.isRunning || this.conversationHistory.length === 0) {
-                    this.showError('まず対話を開始し、AIの発言がある状態で使用してください');
-                    return;
+                    this.showWarning('まず対話を開始し、AIの発言がある状態で使用してください'); return;
+                }
+                const lastAIMessageEntry = [...this.conversationHistory].reverse().find(m => m.provider === 'openai' || m.provider === 'gemini');
+                if (!lastAIMessageEntry) {
+                    this.showWarning('深掘り対象となるAIの発言がありません。'); return;
                 }
 
-                const lastAIMessage = this.conversationHistory.filter(m => m.provider === 'openai' || m.provider === 'gemini').pop();
-                if (!lastAIMessage) {
-                     this.showError('深掘り対象となるAIの発言がありません。');
-                    return;
-                }
+                const targetAI = lastAIMessageEntry.provider;
+                const messageToDeepen = lastAIMessageEntry.message;
 
-                const deepeningRequestText = `ユーザが、あなたの直前の発言「${lastAIMessage.message.substring(0,100)}...」について、より深い探求を求めています。具体例、実証データ、異なる視点からの検証など、多角的に深掘りして議論を豊かにしてください。`;
+                const deepeningRequestText = `あなたは ${targetAI === 'openai' ? 'ChatGPT' : 'Gemini'} です。\n`+
+                                             `人間が、あなたの直前の発言「${messageToDeepen.substring(0,150)}...」について、より深い探求を求めています。\n` +
+                                             `具体例、根拠、異なる視点からの分析、潜在的な意味合いなど、多角的にその論点を深掘りし、議論に新たな奥行きを与えてください。\n` +
+                                             `あなたの役割（${this.getTargetLabel()}, ${this.getGoalLabel()}）を意識して応答してください。`;
 
-                this.addMessage('system', '🔍 **深掘り要求**: AIに前回の論点のより深い探求を依頼しました');
+                this.addMessage('system', `🔍 **深掘り要求**: ${targetAI.toUpperCase()}に「${messageToDeepen.substring(0,30)}...」の深掘りを依頼`);
                 
-                // 最後に発言したAIに深掘りを依頼
-                this.sendMessage(lastAIMessage.provider, deepeningRequestText, true); // isHumanIntervention = true (AIの通常の流れを中断するため)
-                this.learnFromDialogue('深掘り要求', `対象: ${lastAIMessage.provider} - ${lastAIMessage.message.substring(0,50)}...`);
+                if (this.isPaused) this.pauseDialogue(); // 再開
+                this.waitingForIntervention = false; 
+                document.querySelectorAll('.intervention-prompt').forEach(p => p.remove());
+
+                this.sendMessage(targetAI, deepeningRequestText, true);
+                this.learnFromDialogue('深掘り要求', `対象: ${targetAI} - 「${messageToDeepen.substring(0,50)}...」`);
             }
 
             redirectDialogue() {
                  if (!this.isRunning) {
-                    this.showWarning('まず対話を開始してください。');
-                    return;
+                    this.showWarning('まず対話を開始してください。'); return;
                 }
                 const redirectionText = this.elements.humanInput.value.trim();
                 if (!redirectionText) {
-                    this.showError('方向転換の指示を入力してください (例: 「もっと実用的な側面に焦点を当ててください」)');
-                    return;
+                    this.showError('方向転換の指示や新しいトピックを入力してください。'); return;
                 }
 
-                this.addMessage('human', `🎯 **方向転換要求**: ${redirectionText}`);
+                this.addMessage('human', `🎯 **方向転換指示**: ${redirectionText}`);
                 this.humanCount++;
-                // this.updateStats();
+                this.updateStats();
 
-                const nextSpeakerAfterRedirect = this.currentSpeaker === 'openai' ? 'gemini' : 'openai';
-                const redirectionPrompt = `人間が対話の方向転換を要求しています：\n\n"${redirectionText}"\n\n` +
-                    `あなたは ${nextSpeakerAfterRedirect === 'openai' ? 'ChatGPT' : 'Gemini'} です。この指示に従い、議論の流れを調整し、新しい視点から議論を継続してください。`;
-
-                if (this.isPaused) {
-                    this.isPaused = false;
-                    this.elements.pauseBtn.textContent = '⏸️ 一時停止';
-                    this.addMessage('system', '▶️ 方向転換要求により対話を再開しました');
-                }
+                const respondingAI = this.currentSpeaker === 'openai' ? 'gemini' : 'openai'; // 次の番のAI
+                const redirectionPrompt = `あなたは ${respondingAI === 'openai' ? 'ChatGPT' : 'Gemini'} です。\n` +
+                                          `人間が対話の方向転換を指示しました。新しい指示／トピックは以下の通りです：\n「${redirectionText}」\n\n` +
+                                          `これまでの議論は一旦脇に置き、この新しい指示／トピックに焦点を当てて議論を再開してください。\n`+
+                                          `あなたの役割（${this.getTargetLabel()}, ${this.getGoalLabel()}）を意識して、最初の発言をしてください。`;
+                
+                if (this.isPaused) this.pauseDialogue(); // 再開
                 this.waitingForIntervention = false;
-                const interventionPrompts = this.elements.chatContainer.querySelectorAll('.intervention-prompt');
-                interventionPrompts.forEach(prompt => prompt.remove());
+                document.querySelectorAll('.intervention-prompt').forEach(p => p.remove());
 
-                this.sendMessage(nextSpeakerAfterRedirect, redirectionPrompt, true); // isHumanIntervention = true
-                this.learnFromDialogue('方向転換', redirectionText);
+                this.sendMessage(respondingAI, redirectionPrompt, true);
+                this.learnFromDialogue('方向転換指示', redirectionText);
                 this.elements.humanInput.value = '';
             }
 
             saveInsight() {
                 const insightText = this.elements.humanInput.value.trim();
-                if (!insightText) {
-                    this.showError('保存する洞察を入力してください');
-                    return;
-                }
+                if (!insightText) { this.showError('保存する洞察を入力してください'); return; }
 
                 const timestamp = new Date();
-                const insightId = `insight_${timestamp.getTime()}`;
-                
+                const insightId = `human_insight_${timestamp.getTime()}`;
                 this.knowledgeBase.set(insightId, {
-                    topic: '人間の洞察',
-                    content: insightText,
-                    timestamp: timestamp,
-                    source: 'human_insight'
+                    topic: '人間の洞察 (手動保存)', content: insightText, timestamp, source: 'human_manual_save'
                 });
-
-                this.updateKnowledgeDisplay();
-                this.updateStats();
-                
-                this.addMessage('learning', `💡 洞察を学習データに保存しました: "${insightText.substring(0,50)}..."`);
+                this.updateKnowledgeDisplay(); this.updateStats();
+                this.addMessage('learning', `💡 洞察「${insightText.substring(0,50)}...」を学習データに保存しました`);
                 this.elements.humanInput.value = '';
             }
 
             quickIntervention(type) {
-                if (!this.isRunning) {
-                     this.showWarning('まず対話を開始してください。');
-                    return;
-                }
+                if (!this.isRunning) { this.showWarning('まず対話を開始してください。'); return; }
                 const quickMessages = {
-                    '具体例': '具体例を教えてください。実際の事例やデータがあると理解が深まります。',
-                    '反対意見': '反対の視点からはどう見えるでしょうか？批判的な見解も聞かせてください。',
-                    '実用性': '実用性を重視してください。実際に使える形での提案をお願いします。',
-                    '簡潔に': 'もっと簡潔にまとめてください。要点を絞って説明してください。'
+                    '具体例': '今の議論について、もっと具体的な例を挙げて説明してください。',
+                    '反対意見': '今の意見に対して、反対の視点や批判的な意見はありますか？',
+                    '実用性': 'そのアイデアや議論は、実用的な観点から見てどうでしょうか？現実的な応用の可能性は？',
+                    '簡潔に': 'ここまでの議論の要点を、もっと簡潔にまとめてもらえますか？'
                 };
-
                 this.elements.humanInput.value = quickMessages[type] || '';
                 this.humanIntervention();
             }
 
-            // 学習機能
             autoLearnFromMessage(message, provider) {
-                if (!this.learningEnabled) return;
+                if (!this.learningEnabled || provider === 'system' || provider === 'human') return;
 
-                const hasImportantKeywords = this.autoLearnKeywords.some(keyword => 
-                    message.includes(keyword));
+                const hasKeywords = this.autoLearnKeywords.some(k => message.includes(k));
+                const isLongEnough = message.length > 150; // ある程度の長さがあるメッセージ
 
-                if (hasImportantKeywords || message.length > 200) { // メッセージ長も考慮
+                if (hasKeywords || isLongEnough) {
                     const timestamp = new Date();
                     const learnId = `auto_${provider}_${timestamp.getTime()}`;
+                    const importantPart = this.extractImportantPart(message, hasKeywords);
                     
-                    const importantPart = this.extractImportantPart(message);
-                    
-                    this.knowledgeBase.set(learnId, {
-                        topic: `${provider}の洞察 (自動)`,
-                        content: importantPart,
-                        timestamp: timestamp,
-                        source: `auto_${provider}`,
-                        fullMessage: message // 元のメッセージも保存しておくと後で参照できる
-                    });
-
-                    this.updateKnowledgeDisplay();
-                    this.updateStats();
+                    if (importantPart.length > 20) { // 短すぎるものは学習しない
+                        this.knowledgeBase.set(learnId, {
+                            topic: `${provider}の発言からの洞察 (自動)`, content: importantPart, timestamp,
+                            source: `auto_learn_${provider}`, fullMessage: message 
+                        });
+                        this.updateKnowledgeDisplay(); this.updateStats();
+                    }
                 }
             }
 
-            extractImportantPart(message) {
-                const sentences = message.split(/[。．！？\n]+/).filter(s => s.trim() !== '');
-                let importantSentences = sentences.filter(sentence => 
-                    this.autoLearnKeywords.some(keyword => sentence.includes(keyword))
-                );
+            extractImportantPart(message, hasKeywords) {
+                const sentences = message.split(/[。．！？\n]+/).map(s => s.trim()).filter(s => s.length > 10); // 短すぎる文は除外
+                if (sentences.length === 0) return "";
 
-                if (importantSentences.length === 0 && sentences.length > 0) {
-                    // キーワードがない場合は、最初の1-2文を取るなど、別の戦略も考えられる
-                    importantSentences = sentences.slice(0, 2); 
+                let targetSentences = [];
+                if (hasKeywords) {
+                    targetSentences = sentences.filter(s => this.autoLearnKeywords.some(k => s.includes(k)));
                 }
                 
-                let result = importantSentences.slice(0, 3).join('。'); // 最大3文程度
-                if (result.length > 150) result = result.substring(0, 150) + "..."; // 長すぎる場合は切り詰める
-                else if (result.length === 0 && message.length > 0) result = message.substring(0,100) + "..."; // 何も抽出できない場合は最初の部分
+                if (targetSentences.length === 0) { // キーワード文がない場合、結論っぽい部分や最初の文
+                    const concludingKeywords = ['つまり', 'したがって', '結論として', '要するに'];
+                    const concludingSentence = sentences.find(s => concludingKeywords.some(k => s.startsWith(k)));
+                    if (concludingSentence) targetSentences.push(concludingSentence);
+                    else targetSentences.push(sentences[0]); // 最初の文
+                    if (sentences.length > 1 && !concludingSentence) targetSentences.push(sentences[sentences.length -1]); //最後の文も
+                }
 
-                return result || "重要な洞察（詳細はログ参照）";
+                let extracted = targetSentences.slice(0, 2).join('。'); // 最大2文
+                if (extracted.length > 200) extracted = extracted.substring(0, 197) + "...";
+                return extracted;
             }
 
             learnFromDialogue(topic, content) {
                 const timestamp = new Date();
-                const learnId = `dialogue_${timestamp.getTime()}`;
-                
-                this.knowledgeBase.set(learnId, {
-                    topic: topic,
-                    content: content,
-                    timestamp: timestamp,
-                    source: 'dialogue_event' // ソースをより明確に
-                });
-
-                this.updateKnowledgeDisplay();
-                this.updateStats();
+                const learnId = `event_${topic.replace(/\s+/g, '_')}_${timestamp.getTime()}`;
+                this.knowledgeBase.set(learnId, { topic, content, timestamp, source: 'dialogue_event' });
+                this.updateKnowledgeDisplay(); this.updateStats();
             }
 
             updateKnowledgeDisplay() {
-                const knowledgeContainer = this.elements.knowledgeBase;
-                knowledgeContainer.innerHTML = '';
-
-                const sortedItems = Array.from(this.knowledgeBase.values()) // Map.values() を使用
-                    .sort((a, b) => b.timestamp - a.timestamp);
-                    // .slice(0, 10); // 最新10件に限定する場合はコメント解除
-
-                if (sortedItems.length === 0) {
-                     knowledgeContainer.innerHTML = '<div class="knowledge-item"><div class="knowledge-content">学習データはまだありません。</div></div>';
-                } else {
-                    sortedItems.forEach(item => {
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = 'knowledge-item';
-                        itemDiv.innerHTML = `
-                            <div class="knowledge-topic">${item.topic}</div>
-                            <div class="knowledge-content">${item.content.substring(0, 100)}${item.content.length > 100 ? '...' : ''}</div>
-                            <div style="font-size: 0.8em; color: #999; margin-top: 5px;">
-                                ${item.timestamp.toLocaleString()} | ${item.source}
-                            </div>
-                        `;
-                        knowledgeContainer.appendChild(itemDiv);
-                    });
+                const container = this.elements.knowledgeBase;
+                container.innerHTML = '';
+                const items = Array.from(this.knowledgeBase.values()).sort((a,b) => b.timestamp - a.timestamp);
+                if (items.length === 0) {
+                    container.innerHTML = '<div class="knowledge-item"><div class="knowledge-content">学習データはありません。</div></div>';
+                    return;
                 }
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'knowledge-item';
+                    div.innerHTML = `
+                        <div class="knowledge-topic">${item.topic} (${item.source})</div>
+                        <div class="knowledge-content" title="${item.content}">${item.content.substring(0,100)}${item.content.length > 100 ? '...' : ''}</div>
+                        <div style="font-size:0.8em;color:#999;margin-top:5px;">${item.timestamp.toLocaleString()}</div>`;
+                    container.appendChild(div);
+                });
             }
 
             exportKnowledge() {
-                if (this.knowledgeBase.size === 0) {
-                    this.showWarning("エクスポートする学習データがありません。");
-                    return;
-                }
-                const knowledgeArray = Array.from(this.knowledgeBase.values()).map(item => ({
-                    // id は Map のキーなので、エクスポート時には含めないか、別途生成する
-                    ...item,
-                    timestamp: item.timestamp.toISOString() // ISO形式で保存
-                }));
-
-                const dataStr = JSON.stringify(knowledgeArray, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `crossthink_knowledge_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(link); // Firefoxでダウンロードに必要
-                link.click();
-                document.body.removeChild(link); // すぐに削除
-                
+                if (this.knowledgeBase.size === 0) { this.showWarning("エクスポートする学習データがありません。"); return; }
+                const data = Array.from(this.knowledgeBase.entries()).map(([id, item]) => ({id, ...item, timestamp: item.timestamp.toISOString()}));
+                const str = JSON.stringify(data, null, 2);
+                const blob = new Blob([str], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `crossthink_knowledge_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                
-                this.addMessage('learning', 
-                    `📤 学習データをエクスポートしました (${knowledgeArray.length}件)`);
+                this.addMessage('learning', `📤 学習データ ${data.length}件をエクスポートしました`);
             }
 
             importKnowledge() {
                 const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.json';
-                input.onchange = (e) => {
+                input.type = 'file'; input.accept = '.json';
+                input.onchange = e => {
                     const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            try {
-                                const importedData = JSON.parse(event.target.result);
-                                let importCount = 0;
-                                
-                                if (!Array.isArray(importedData)) {
-                                    this.showError('インポートファイルはJSON配列形式である必要があります。');
-                                    return;
-                                }
-
-                                importedData.forEach((item, index) => {
-                                    // 必須フィールドのチェック
-                                    if (item.topic && item.content && item.timestamp && item.source) {
-                                        // IDはインポート時に新規生成するか、ファイル内にあればそれを使う
-                                        const itemId = item.id || `imported_${new Date(item.timestamp).getTime()}_${index}`;
-                                        this.knowledgeBase.set(itemId, {
-                                            ...item,
-                                            timestamp: new Date(item.timestamp) // Dateオブジェクトに変換
-                                        });
-                                        importCount++;
-                                    } else {
-                                        console.warn(`Skipping invalid item at index ${index}:`, item);
-                                    }
-                                });
-                                
-                                this.updateKnowledgeDisplay();
-                                this.updateStats();
-                                this.addMessage('learning', 
-                                    `📥 学習データをインポートしました (${importCount}件)`);
-                            } catch (error) {
-                                this.showError('ファイルの読み込みまたは解析に失敗しました: ' + error.message);
-                                console.error("Import error:", error);
-                            }
-                        };
-                        reader.onerror = () => {
-                            this.showError('ファイルの読み込みに失敗しました。');
-                        };
-                        reader.readAsText(file);
-                    }
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = event => {
+                        try {
+                            const data = JSON.parse(event.target.result);
+                            if (!Array.isArray(data)) throw new Error("JSONデータは配列形式である必要があります。");
+                            let count = 0;
+                            data.forEach(item => {
+                                if (item.id && item.topic && item.content && item.timestamp && item.source) {
+                                    this.knowledgeBase.set(item.id, {...item, timestamp: new Date(item.timestamp)});
+                                    count++;
+                                } else console.warn("インポートデータ形式不正:", item);
+                            });
+                            this.updateKnowledgeDisplay(); this.updateStats();
+                            this.addMessage('learning', `📥 学習データ ${count}件をインポートしました`);
+                        } catch (err) { this.showError("ファイル解析エラー: " + err.message); console.error(err); }
+                    };
+                    reader.onerror = () => this.showError("ファイル読込エラー");
+                    reader.readAsText(file);
                 };
                 input.click();
             }
 
             clearKnowledge() {
-                if (confirm('学習データをすべて削除しますか？システム初期化時のデータ以外が削除されます。この操作は取り消せません。')) {
-                    const systemInitData = this.knowledgeBase.get('system_init');
+                if (confirm('システム初期化データ以外の学習データを全て削除しますか？この操作は元に戻せません。')) {
+                    const initData = this.knowledgeBase.get('system_init');
                     this.knowledgeBase.clear();
-                    if(systemInitData) this.knowledgeBase.set('system_init', systemInitData); // システム初期化データは残す
-                    
-                    this.updateKnowledgeDisplay();
-                    this.updateStats();
+                    if (initData) this.knowledgeBase.set('system_init', initData);
+                    this.updateKnowledgeDisplay(); this.updateStats();
                     this.addMessage('learning', '🗑️ 学習データをクリアしました (初期化データ除く)');
                 }
             }
 
             showLearningStats() {
-                const totalItems = this.knowledgeBase.size;
-                const sourceStats = {};
-                
-                this.knowledgeBase.forEach(item => {
-                    sourceStats[item.source] = (sourceStats[item.source] || 0) + 1;
-                });
-
-                let statsText = `📊 学習統計:\n総アイテム数: ${totalItems}\n\nソース別内訳:\n`;
-                Object.entries(sourceStats).forEach(([source, count]) => {
-                    statsText += `  • ${source}: ${count}件\n`;
-                });
-
-                this.addMessage('learning', statsText);
+                const total = this.knowledgeBase.size;
+                const stats = {};
+                this.knowledgeBase.forEach(item => { stats[item.source] = (stats[item.source] || 0) + 1; });
+                let text = `📊 学習統計: 総アイテム数: ${total}\n\nソース別:\n`;
+                for (const src in stats) text += `  • ${src}: ${stats[src]}件\n`;
+                this.addMessage('learning', text);
             }
 
-            pauseDialogue(triggeredBySystem = false) { // システムからの呼び出しかどうかを判定
+            pauseDialogue(triggeredBySystem = false) {
                 if (!this.isRunning) return;
-
                 this.isPaused = !this.isPaused;
                 this.elements.pauseBtn.textContent = this.isPaused ? '▶️ 再開' : '⏸️ 一時停止';
                 
-                const statusMessage = this.isPaused ? '⏸️ 対話を一時停止しました' : '▶️ 対話を再開しました';
-                if (!triggeredBySystem || !this.isPaused) { // システムが介入プロンプト表示で停止した場合は、再開時のみメッセージ
-                    this.addMessage('system', statusMessage);
+                if (!triggeredBySystem || !this.isPaused) {
+                    this.addMessage('system', this.isPaused ? '⏸️ 対話を一時停止しました' : '▶️ 対話を再開します...');
                 }
-                
-                if (!this.isPaused && this.isRunning && !this.waitingForIntervention) {
-                    // 再開時に、最後に発言したAIの次のAIから継続
-                    setTimeout(() => {
-                        if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages && this.conversationHistory.length > 0) {
-                            const lastMessage = this.conversationHistory[this.conversationHistory.length -1];
-                            const nextProvider = lastMessage.provider === 'openai' ? 'gemini' : 'openai';
-                            const resumePrompt = this.generateResumePrompt(lastMessage.message);
-                            this.sendMessage(nextProvider, resumePrompt);
-                        } else if (this.conversationHistory.length === 0) { // まだ何も発言がない場合
-                             const topic = this.elements.topicInput.value.trim();
-                             const initialPrompt = this.generateInitialPrompt(topic);
-                             this.sendMessage('openai', initialPrompt); //最初のAIから
+
+                if (!this.isPaused && this.isRunning) { // 再開時
+                    this.startTimer(); // タイマー更新を再キック
+                    if (!this.waitingForIntervention && this.conversationHistory.length > 0) {
+                        const lastEntry = this.conversationHistory[this.conversationHistory.length - 1];
+                        if (lastEntry.provider === 'openai' || lastEntry.provider === 'gemini') { // AIの応答で終わっていた場合
+                            setTimeout(() => { // 即時送信を避ける
+                                if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages) {
+                                    const nextRespondingAI = lastEntry.provider === 'openai' ? 'gemini' : 'openai';
+                                    const resumePrompt = this.generateResumePrompt(lastEntry.message);
+                                    this.sendMessage(nextRespondingAI, resumePrompt, false);
+                                }
+                            }, 500);
                         }
-                    }, 1000);
+                    } else if (this.conversationHistory.length === 0) { // まだ何も発言がない場合で再開
+                        this.startDialogue(); // 実質的に最初から開始
+                    }
                 }
             }
 
-            generateResumePrompt(lastMessageContent) {
-                return `対話が再開されました。直前の発言は「${lastMessageContent.substring(0,100)}...」でした。この議論を踏まえて、さらに深い洞察を提供してください。`;
+            generateResumePrompt(lastMessageContent) { // 対話再開時のプロンプト
+                return `対話が一時停止から再開されました。直前の相手の発言は「${lastMessageContent.substring(0,100)}...」でした。この議論を引き継ぎ、あなたの意見を述べてください。`;
             }
 
             stopDialogue() {
                 this.isRunning = false;
-                this.isPaused = false; // 停止時は一時停止も解除
+                this.isPaused = false;
                 this.waitingForIntervention = false;
                 this.elements.startBtn.disabled = false;
                 this.elements.pauseBtn.disabled = true;
-                this.elements.stopBtn.disabled = true;
                 this.elements.pauseBtn.textContent = '⏸️ 一時停止';
+                this.elements.stopBtn.disabled = true;
                 
                 const finalStatsSummary = this.generateFinalStats();
                 this.addMessage('system', 
-                    `🛑 対話終了\n\n` + // ★修正点2: 不要な文字列と行を整理
+                    `🛑 対話終了\n\n` +
                     `📊 最終統計:\n` +
-                    `• 総メッセージ数: ${this.messageCount}\n` +
-                    `• ChatGPT: ${this.openaiCount}回\n` +
-                    `• Gemini: ${this.geminiCount}回\n` +
+                    `• 総メッセージ数 (AI+人間): ${this.messageCount}\n` +
+                    `• ChatGPT発言: ${this.openaiCount}回\n` +
+                    `• Gemini発言: ${this.geminiCount}回\n` +
                     `• 人間介入: ${this.humanCount}回\n` +
-                    `• 学習アイテム: ${this.knowledgeBase.size}件\n` +
+                    `• 学習アイテム総数: ${this.knowledgeBase.size}件\n` +
                     `• 対話時間: ${this.startTime ? Math.floor((Date.now() - this.startTime) / 1000) : 0}秒\n\n` +
-                    `🧠 学習された主要な洞察がナレッジベースに保存されました。`
+                    `🧠 学習データは「学習機能」タブで確認・管理できます。`
                 );
-                
-                this.learnFromDialogue('対話終了', `対話が終了しました。${finalStatsSummary}`);
+                this.learnFromDialogue('対話終了', `対話終了。${finalStatsSummary}`);
             }
 
             generateFinalStats() {
-                return `総メッセージ: ${this.messageCount}, ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount}, 人間介入: ${this.humanCount}, 学習アイテム: ${this.knowledgeBase.size}`;
+                return `総メッセージ: ${this.messageCount}, ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount}, 人間: ${this.humanCount}, 学習アイテム: ${this.knowledgeBase.size}`;
             }
 
             async callOpenAI(prompt) {
                 const apiKey = this.elements.openaiKey.value.trim();
-                
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${apiKey}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: 'gpt-3.5-turbo', // モデルは適宜変更可能
-                        messages: [{ role: 'user', content: prompt }],
-                        max_tokens: 1500, // 応答の最大長
-                        temperature: 0.7, // 応答の多様性 (0-1)
-                        top_p: 0.9,       // トークン選択の多様性
-                        // frequency_penalty: 0.1 // 頻出トークンの抑制 (必要に応じて)
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ message: "Unknown API error" }));
-                    throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
-                }
-
-                const data = await response.json();
-                if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
-                    return data.choices[0].message.content;
-                } else {
-                    throw new Error('OpenAI APIから予期しない形式の応答がありました。');
+                try {
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: 'gpt-3.5-turbo', messages: [{ role: 'user', content: prompt }],
+                            max_tokens: 1500, temperature: 0.7, top_p: 0.9
+                        })
+                    });
+                    if (!response.ok) {
+                        const errData = await response.json().catch(()=>({}));
+                        throw new Error(`OpenAI API ${response.status}: ${errData.error?.message || response.statusText}`);
+                    }
+                    const data = await response.json();
+                    return data.choices?.[0]?.message?.content || "OpenAIからの応答が空か不正です。";
+                } catch (error) {
+                    console.error("OpenAI API Error:", error);
+                    this.showError(`OpenAI APIエラー: ${error.message}`);
+                    return this.generateFallbackResponse(prompt, `OpenAI: ${error.message}`); // エラー時もフォールバックを返す
                 }
             }
 
             async callGemini(prompt) {
                 const apiKey = this.elements.geminiKey.value.trim();
-                
-                // 推奨モデル順に試行 (例: Flash -> Pro)
                 const models = ['gemini-1.5-flash-latest', 'gemini-pro'];
-                let lastError = null;
-
                 for (const model of models) {
                     try {
                         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{
-                                    parts: [{
-                                        text: prompt
-                                    }]
-                                }],
-                                generationConfig: {
-                                    maxOutputTokens: 1500,
-                                    temperature: 0.6,
-                                    topP: 0.8,
-                                    // topK: 40 // 必要に応じて
-                                }
+                                contents: [{ parts: [{ text: prompt }] }],
+                                generationConfig: { maxOutputTokens: 1500, temperature: 0.6, topP: 0.8 }
                             })
                         });
-
                         if (response.ok) {
                             const data = await response.json();
-                            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-                                return data.candidates[0].content.parts[0].text;
-                            } else {
-                                // レスポンス形式が不正な場合もエラーとして扱う
-                                lastError = new Error(`Gemini API (${model}) から予期しない形式の応答がありました。`);
-                                continue; // 次のモデルを試行
-                            }
-                        } else {
-                             const errorData = await response.json().catch(() => ({ message: "Unknown API error" }));
-                             lastError = new Error(`Gemini API error (${model}): ${response.status} - ${errorData.error?.message || response.statusText}`);
-                             if (response.status === 429) { // Rate limit の場合はすぐにフォールバック
-                                 console.warn(`Gemini API (${model}) rate limit exceeded.`);
-                                 break;
-                             }
-                             // 他のエラーなら次のモデルを試す
+                            return data.candidates?.[0]?.content?.parts?.[0]?.text || `Gemini (${model}) からの応答が空か不正です。`;
                         }
-                    } catch (error) {
-                        lastError = error; // ネットワークエラーなど
-                        console.error(`Error calling Gemini API (${model}):`, error);
-                    }
+                        if (response.status === 429) { // Rate limit
+                             this.showWarning(`Gemini API (${model}) の利用上限に達した可能性があります。`);
+                             continue; // 次のモデルへ
+                        }
+                        const errData = await response.json().catch(()=>({}));
+                        console.warn(`Gemini API (${model}) Error ${response.status}: ${errData.error?.message || response.statusText}`);
+                    } catch (error) { console.warn(`Gemini API (${model}) Call Failed:`, error); }
                 }
-                // すべてのモデルで失敗した場合
-                console.warn("All Gemini models failed. Using fallback response.", lastError);
-                return this.generateFallbackResponse(prompt, lastError ? lastError.message : "API呼び出しに失敗");
+                const geminiErrorMsg = `Gemini APIの全モデルで呼び出しに失敗しました。`;
+                this.showError(geminiErrorMsg);
+                return this.generateFallbackResponse(prompt, geminiErrorMsg);
             }
-
-            generateFallbackResponse(prompt, reason = "API呼び出しに失敗") {
-                return `申し訳ありませんが、技術的な問題によりAIからの応答を取得できませんでした。(理由: ${reason})\n` +
-                        "時間をおいて再度お試しいただくか、管理者にご連絡ください。\n" +
-                        "※これは代替応答です。";
+            
+            generateFallbackResponse(prompt, reason = "API呼び出し失敗") {
+                console.error("Fallback response generated due to:", reason);
+                return `AI (${reason.split(':')[0]}) からの応答取得に失敗しました。(${reason}). ネットワーク接続を確認するか、時間をおいて再度お試しください。`;
             }
 
             generateSummaryPrompt() {
                 const topic = this.elements.topicInput.value.trim();
-                
                 if (this.conversationHistory.length === 0) {
-                    this.showError('要約対象の対話ログがありません。まず対話を開始してください。');
-                    return;
+                    this.showError('要約対象の対話ログがありません。'); return;
                 }
-
-                let conversationLog = '';
-                let humanInterventionsLog = ''; // 人間介入のみを抽出
-                let learningInsightsLog = '';   // 学習メッセージのみを抽出
-
-                this.conversationHistory.forEach(entry => {
-                    const formattedMessage = `${entry.provider.toUpperCase()}: ${entry.message}\n`;
-                    conversationLog += formattedMessage;
-                    if(entry.provider === 'human') {
-                        humanInterventionsLog += `${entry.message}\n\n`;
-                    }
+                let log = `トピック: 「${topic}」\n対話モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}\n\n`;
+                this.conversationHistory.forEach(e => {
+                    log += `${e.provider === 'openai' ? 'ChatGPT' : e.provider === 'gemini' ? 'Gemini' : '人間'}:\n${e.message}\n\n`;
                 });
                 
-                this.elements.chatContainer.querySelectorAll('.learning-message div:not(.message-header)').forEach(el => {
-                    learningInsightsLog += el.textContent.trim() + '\n\n';
-                });
+                let knowledgeSummary = "\n--- 学習された主な洞察 ---\n";
+                Array.from(this.knowledgeBase.values())
+                    .filter(item => item.source !== 'system_init' && item.source !== 'dialogue_event')
+                    .slice(0, 5) // 最新5件程度
+                    .forEach(item => {
+                        knowledgeSummary += `[${item.topic} (${item.source})]: ${item.content.substring(0,150)}...\n`;
+                    });
 
-
-                let knowledgeBaseSummary = '主な学習アイテム:\n';
-                let count = 0;
-                for (const item of this.knowledgeBase.values()) {
-                    if (item.source !== 'system_init' && item.source !== 'dialogue_event' && count < 5) { // 主要なものを5件程度
-                        knowledgeBaseSummary += `  - [${item.source}] ${item.topic}: ${item.content.substring(0, 80)}...\n`;
-                        count++;
-                    }
-                }
-                if (count === 0) knowledgeBaseSummary = "学習アイテムはまだ少ないです。\n";
-
-
-                const summaryPrompt = `Crossthink v5.0 Advanced Interactive Edition で行われた以下の対話セッションを総合的に分析し、トピック「${topic}」について包括的なレポートを作成してください。
-
-【セッション概要】
-- 対話モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}
-- 総AIメッセージ数: ${this.openaiCount + this.geminiCount} (ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount})
-- 人間介入回数: ${this.humanCount}
-- 自動学習アイテム数 (抜粋): ${Math.min(count, 5)} / ${this.knowledgeBase.size -1} (初期化データ除く)
-
-【v5.0 Advanced Interactive Edition の特徴を考慮した分析要求】
-1.  **AI自律対話の品質評価**:
-    * ChatGPTとGeminiがそれぞれどのような貢献をしたか。
-    * AI間の議論は建設的で、トピックの探求に深みをもたらしたか。
-2.  **人間介入の効果分析**:
-    * 人間介入は議論の方向性や質にどのような影響を与えたか。
-    * AIと人間の協働は効果的だったか。
-3.  **自動学習システムの成果**:
-    * 自動学習機能によってどのような重要な洞察が抽出されたか（上記「主な学習アイテム」参照）。
-    * この学習システムは対話内容の価値を捉えられているか。
-4.  **総合的結論と提言**:
-    * この対話セッションから得られた最も重要な発見や結論は何か。
-    * Crossthink v5.0 のような統合システム（自律対話・人間介入・学習）の潜在的な価値や改善点は何か。
-
-【対話ログ全文】
-${conversationLog}
-${humanInterventionsLog ? "\n【主な人間介入内容】\n" + humanInterventionsLog : ""}
-${learningInsightsLog ? "\n【学習システムからの通知】\n" + learningInsightsLog : ""}
-${knowledgeBaseSummary}
-
-【レポート構成案】
-1.  はじめに (トピックとセッション概要)
-2.  AI自律対話の分析 (各AIの貢献、相互作用)
-3.  人間介入の影響とAI-人間協働の評価
-4.  学習機能による洞察抽出の評価
-5.  総合的結論と今後の展望/提言
-
-レポートは詳細かつ具体的で、4000～5000字程度を目安としてください。Crossthink v5.0の各機能がどのように連携し、どのような価値を生み出したかを明確に記述してください。`;
+                const prompt = `以下の Crossthink v5.0 でのAI対話セッションのログを分析し、包括的なレポートを作成してください。\n\n` +
+                               `【セッション情報】\n` +
+                               `- 総AIメッセージ数: ${this.openaiCount + this.geminiCount} (ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount})\n` +
+                               `- 人間介入回数: ${this.humanCount}\n` +
+                               `- 学習アイテム数: ${this.knowledgeBase.size}\n` +
+                               log + knowledgeSummary +
+                               `\n【レポート作成指示】\n` +
+                               `1. 対話全体の要約と主要な論点の変遷。\n` +
+                               `2. ChatGPTとGeminiの貢献、議論スタイル、特徴的な意見の比較。\n` +
+                               `3. 人間介入が議論に与えた影響（方向転換、深掘り、補足など）。\n` +
+                               `4. 自動学習された洞察の質と、対話内容からの価値抽出の評価。\n` +
+                               `5. この対話セッションから得られた最終的な結論や重要な発見。\n` +
+                               `6. Crossthink v5.0のようなシステムの強み、弱み、今後の改善提案。\n\n` +
+                               `レポートは構造化され、具体的で分析的であること。文字数は4000字以上を目安とする。`;
 
                 if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(summaryPrompt).then(() => {
-                        this.addMessage('system', 
-                            '📋 Crossthink v5.0 Advanced Interactive Edition 要約プロンプトをクリップボードにコピーしました！\n\n' +
-                            'このプロンプトを高性能なLLM (例: GPT-4, Claude 3 Opus, Gemini Advancedなど) に入力して、詳細なレポートを生成してください。\n' +
-                            `プロンプト文字数: ${summaryPrompt.length}文字`
-                        );
-                    }).catch(err => {
-                        console.error('クリップボードへのコピーに失敗:', err);
-                        this.showPromptWindow(summaryPrompt); // フォールバック
-                    });
-                } else {
-                    this.showPromptWindow(summaryPrompt); // HTTPSでない場合など
-                }
+                    navigator.clipboard.writeText(prompt).then(() => {
+                        this.addMessage('system', `📋 要約生成用プロンプト (約${prompt.length}字) をコピーしました。\n高性能LLMに貼り付けてレポートを生成してください。`);
+                    }).catch(err => { console.error('Clipboard copy failed:', err); this.showPromptWindow(prompt); });
+                } else { this.showPromptWindow(prompt); }
             }
 
-            showPromptWindow(summaryPrompt) {
-                const summaryWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
-                if (summaryWindow) {
-                    summaryWindow.document.write(`
-                        <html>
-                            <head>
-                                <title>Crossthink v5.0 要約プロンプト</title>
-                                <style>
-                                    body { font-family: system-ui, sans-serif; margin: 0; padding: 1em; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-                                    .container { background-color: white; padding: 2em; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 90%; max-width: 800px; }
-                                    h2 { margin-top: 0; color: #333; }
-                                    textarea { width: 100%; height: 60vh; margin-bottom: 1em; padding: 0.8em; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 0.9em; box-sizing: border-box; }
-                                    button { padding: 0.8em 1.5em; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 0.5em; }
-                                    .copy-btn { background-color: #4CAF50; color: white; }
-                                    .close-btn { background-color: #f44336; color: white; }
-                                    .stats { font-size: 0.9em; background-color: #e7f3fe; padding: 0.8em; border-radius: 4px; margin-bottom: 1em; border-left: 4px solid #2196F3;}
-                                </style>
-                            </head>
-                            <body>
-                                <div class="container">
-                                    <h2>🚀 Crossthink v5.0 要約プロンプト</h2>
-                                    <div class="stats">
-                                      <strong>情報:</strong> このプロンプトを高性能LLMに貼り付けて、対話の包括的なレポートを生成してください。<br>
-                                      文字数: ${summaryPrompt.length}
-                                    </div>
-                                    <textarea id="promptArea" readonly>${summaryPrompt.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</textarea>
-                                    <button class="copy-btn" onclick="document.getElementById('promptArea').select(); document.execCommand('copy'); alert('プロンプトをコピーしました！');">📋 コピー</button>
-                                    <button class="close-btn" onclick="window.close();">❌ 閉じる</button>
-                                </div>
-                            </body>
-                        </html>
-                    `);
-                    summaryWindow.document.close(); // 重要
-                } else {
-                    this.addMessage('system', 
-                        '⚠️ ポップアップウィンドウを開けませんでした。ブラウザのポップアップブロック設定を確認してください。\n' +
-                        'プロンプトはコンソールに出力されました。'
-                    );
-                    console.log("要約プロンプト:\n", summaryPrompt);
-                }
+            showPromptWindow(promptText) {
+                const win = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                if (win) {
+                    win.document.write('<html><head><title>要約プロンプト</title><style>body{font-family:sans-serif;padding:1em;}textarea{width:98%;height:85vh;padding:0.5em;font-family:monospace;white-space:pre-wrap;}</style></head><body><h2>要約生成用プロンプト</h2><p>以下のプロンプトをコピーして、高性能LLMに貼り付けてください。</p><textarea readonly>${promptText.replace(/</g, "&lt;")}</textarea></body></html>');
+                    win.document.close();
+                } else { this.showWarning('ポップアップがブロックされました。コンソールにプロンプトを出力します。'); console.log(promptText); }
             }
 
             addMessage(provider, content, isThinking = false) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${provider}-message`;
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${provider}-message`;
+                const time = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+                let name, emoji, role = '';
 
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit'});
-
-                let providerName, emoji, roleDesc = '';
-                switch (provider) {
-                    case 'openai':
-                        providerName = 'ChatGPT'; emoji = '🟢'; roleDesc = ` (${this.targetMode})`;
-                        this.currentSpeaker = 'openai'; // 最後に発言したAIを記録
-                        break;
-                    case 'gemini':
-                        providerName = 'Gemini'; emoji = '🔷'; roleDesc = ` (${this.targetMode})`;
-                        this.currentSpeaker = 'gemini'; // 最後に発言したAIを記録
-                        break;
-                    case 'human':
-                        providerName = 'あなた'; emoji = '👤';
-                        break;
-                    case 'learning':
-                        providerName = '学習システム'; emoji = '🧠';
-                        break;
-                    case 'system': default:
-                        providerName = 'Crossthink v5.0'; emoji = '🚀';
-                        break;
+                switch(provider) {
+                    case 'openai': name='ChatGPT'; emoji='🟢'; role=` (${this.targetMode})`; this.currentSpeaker='openai'; break;
+                    case 'gemini': name='Gemini'; emoji='🔷'; role=` (${this.targetMode})`; this.currentSpeaker='gemini'; break;
+                    case 'human': name='あなた'; emoji='👤'; break;
+                    case 'learning': name='学習システム'; emoji='🧠'; break;
+                    default: name='Crossthink v5.0'; emoji='🚀';
                 }
-
-                messageDiv.innerHTML = `
-                    <div class="message-header">
-                        ${emoji} ${providerName}${roleDesc}
-                        <span class="message-time">${timeStr}</span>
-                    </div>
-                    <div class="${isThinking ? 'thinking' : ''}">${content.replace(/\n/g, '<br>')}</div>
-                `;
-
-                this.elements.chatContainer.appendChild(messageDiv);
+                msgDiv.innerHTML = `<div class="message-header">${emoji} ${name}${role}<span class="message-time">${time}</span></div>` +
+                                   `<div class="${isThinking ? 'thinking' : ''}">${content.replace(/\n/g, '<br>')}</div>`;
+                this.elements.chatContainer.appendChild(msgDiv);
                 this.elements.chatContainer.scrollTop = this.elements.chatContainer.scrollHeight;
 
                 if (!isThinking && (provider === 'openai' || provider === 'gemini' || provider === 'human')) {
-                    this.messageCount++; // AIと人間の応答のみカウント
+                    this.messageCount++;
+                    // APIコール数のカウントは sendMessage 内で行う
                     // this.updateStats(); // sendMessage の finally でまとめて更新
                 }
             }
 
             removeLastMessage() {
-                const messages = this.elements.chatContainer.querySelectorAll('.message');
-                if (messages.length > 0) {
-                    messages[messages.length - 1].remove();
-                }
+                const msg = this.elements.chatContainer.lastElementChild;
+                if (msg && msg.classList.contains('message')) msg.remove();
             }
 
             clearChat() {
                 this.elements.chatContainer.innerHTML = '';
-                this.messageCount = 0;
-                this.openaiCount = 0;
-                this.geminiCount = 0;
-                this.humanCount = 0;
-                this.conversationHistory = [];
-                this.interventionPoints = [];
-                if (this.startTime) this.startTime = null; // タイマーリセット
+                this.messageCount = 0; this.openaiCount = 0; this.geminiCount = 0; this.humanCount = 0;
+                this.conversationHistory = []; this.startTime = null;
                 this.elements.elapsed.textContent = '0';
-
-                // ボタンの状態もリセット
                 this.elements.startBtn.disabled = false;
-                this.elements.pauseBtn.disabled = true;
-                this.elements.pauseBtn.textContent = '⏸️ 一時停止';
+                this.elements.pauseBtn.disabled = true; this.elements.pauseBtn.textContent = '⏸️ 一時停止';
                 this.elements.stopBtn.disabled = true;
-                this.isPaused = false;
-                this.isRunning = false;
-
-
-                this.updateStats(); // 統計表示を0に
-                this.showWelcomeMessage();
-                this.hideError();
-                this.hideWarning();
+                this.isRunning = false; this.isPaused = false; this.waitingForIntervention = false;
+                this.updateStats(); this.showWelcomeMessage(); this.hideError(); this.hideWarning();
             }
 
             showError(message) {
                 this.elements.errorDisplay.textContent = `❌ エラー: ${message}`;
                 this.elements.errorDisplay.style.display = 'block';
-                this.elements.warningDisplay.style.display = 'none'; // エラー表示時は警告を隠す
+                this.elements.warningDisplay.style.display = 'none';
             }
 
-            hideError() {
-                this.elements.errorDisplay.style.display = 'none';
-            }
+            hideError() { this.elements.errorDisplay.style.display = 'none'; }
 
             showWarning(message) {
                 this.elements.warningDisplay.textContent = `⚠️ 警告: ${message}`;
                 this.elements.warningDisplay.style.display = 'block';
-                 this.elements.errorDisplay.style.display = 'none'; // 警告表示時はエラーを隠す
+                this.elements.errorDisplay.style.display = 'none';
             }
 
-            hideWarning() {
-                this.elements.warningDisplay.style.display = 'none';
-            }
+            hideWarning() { this.elements.warningDisplay.style.display = 'none'; }
 
             updateStats() {
                 this.elements.totalMessages.textContent = this.messageCount;
@@ -1940,132 +1688,98 @@ ${knowledgeBaseSummary}
             }
 
             startTimer() {
-                const updateTimerDisplay = () => {
-                    if (this.isRunning && !this.isPaused && this.startTime) { // 実行中で一時停止中でない場合のみ更新
-                        const elapsedSeconds = Math.floor((Date.now() - this.startTime) / 1000);
-                        this.elements.elapsed.textContent = elapsedSeconds;
+                if (!this.isRunning || !this.startTime) return; // 開始時のみ設定
+                
+                const timerTick = () => {
+                    if (this.isRunning && !this.isPaused && this.startTime) {
+                        this.elements.elapsed.textContent = Math.floor((Date.now() - this.startTime) / 1000);
+                        setTimeout(timerTick, 1000);
+                    } else if (this.isRunning && this.isPaused) { // 一時停止中もタイマーは呼び出し続けるが、表示は更新しない
+                        setTimeout(timerTick, 1000);
                     }
-                    if (this.isRunning) { // isRunningの間はタイマーを呼び出し続ける
-                        setTimeout(updateTimerDisplay, 1000);
-                    }
+                    // isRunningがfalseになったらタイマーは停止
                 };
-                if (this.isRunning) {
-                    updateTimerDisplay();
-                }
+                timerTick();
             }
 
             getTargetLabel() {
-                const labels = { 'practical': '🏠 実用的', 'business': '💼 ビジネス', 'philosophical': '🧠 哲学的' };
+                const labels = {'practical':'🏠 実用的','business':'💼 ビジネス','philosophical':'🧠 哲学的'};
                 return labels[this.targetMode] || this.targetMode;
             }
-
             getGoalLabel() {
-                const labels = { 'ideation': '💡 案出し', 'consensus': '🤝 合意形成', 'exploration': '🔍 探索' };
+                const labels = {'ideation':'💡 案出し','consensus':'🤝 合意形成','exploration':'🔍 探索'};
                 return labels[this.goalMode] || this.goalMode;
             }
-
             getInterventionLabel() {
-                const labels = ['なし', '稀', '少', '中', '多', '頻繁', '非常に頻繁', '常時', 'リアルタイム', 'シンクロ', 'フル介入'];
+                const labels = ['なし','稀','少','中','多','頻繁','非常に頻繁','常時','リアルタイム','シンクロ','フル介入'];
                 return labels[this.interventionFrequency] || '中程度';
             }
         }
 
-        // タブ切り替え機能
         function switchTab(tabName) {
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            // event.target が button 要素であることを保証 (button 要素に onclick が設定されているため)
-            const clickedButton = Array.from(document.querySelectorAll('.tab-button')).find(btn => btn.textContent.trim().includes(
-                tabName === 'autonomous' ? 'AI自律対話' :
-                tabName === 'intervention' ? '人間介入モード' :
-                '学習機能'
-            ));
-
-            if (clickedButton) {
-                 clickedButton.classList.add('active');
-            }
-           
-            document.getElementById(`${tabName}-tab`).classList.add('active');
-            
-            if (window.crossthinkSystem) {
-                window.crossthinkSystem.currentTab = tabName;
-            }
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const activeBtn = Array.from(document.querySelectorAll('.tab-button')).find(b => {
+                if (tabName === 'autonomous' && b.textContent.includes('AI自律対話')) return true;
+                if (tabName === 'intervention' && b.textContent.includes('人間介入モード')) return true;
+                if (tabName === 'learning' && b.textContent.includes('学習機能')) return true;
+                return false;
+            });
+            if (activeBtn) activeBtn.classList.add('active');
+            const activeContent = document.getElementById(`${tabName}-tab`);
+            if (activeContent) activeContent.classList.add('active');
+            if (window.crossthinkSystem) window.crossthinkSystem.currentTab = tabName;
         }
 
-        // グローバル関数（介入プロンプト用など）
         function continueAutonomously() {
             if (window.crossthinkSystem) {
                 window.crossthinkSystem.waitingForIntervention = false;
-                
-                const interventionPrompts = document.querySelectorAll('.intervention-prompt');
-                interventionPrompts.forEach(prompt => prompt.remove());
-                
-                // 対話を再開（pauseDialogueが内部でisPausedを反転させるので、falseを渡して再開させる）
-                window.crossthinkSystem.pauseDialogue(true); // システムが介入プロンプトから再開したことを示す
+                document.querySelectorAll('.intervention-prompt').forEach(p => p.remove());
+                // pauseDialogue は isPaused をトグルするので、現在の isPaused が true (停止中) なら再開される
+                if (window.crossthinkSystem.isPaused) {
+                     window.crossthinkSystem.pauseDialogue(true); // システムによる再開
+                }
             }
         }
 
         function switchToInterventionTab() {
-            // `event.target` を使わずにタブボタンを特定してクリックイベントを発火させるか、直接 `switchTab` を呼ぶ
-            const interventionButton = Array.from(document.querySelectorAll('.tab-button')).find(btn => btn.textContent.trim().includes('人間介入モード'));
-            if (interventionButton) {
-                 interventionButton.click(); // これで switchTab('intervention') が呼ばれる
-            } else {
-                 switchTab('intervention'); // フォールバック
-            }
-            
+            const btn = Array.from(document.querySelectorAll('.tab-button')).find(b=>b.textContent.includes('人間介入モード'));
+            if(btn) btn.click(); else switchTab('intervention');
             if (window.crossthinkSystem) {
-                window.crossthinkSystem.addMessage('system', '👤 人間介入タブに切り替わりました。介入内容を入力し、「対話に介入」ボタンを押してください。');
-                window.crossthinkSystem.elements.humanInput.focus();
+                 window.crossthinkSystem.elements.humanInput.focus();
+                 if (window.crossthinkSystem.isPaused && window.crossthinkSystem.waitingForIntervention){
+                     // 何もしないか、ユーザーに介入を促すメッセージを出す (介入タブへの切り替え自体がアクション)
+                 }
             }
         }
 
-        // HTMLのonclick属性から呼び出されるグローバル関数群
-        function humanIntervention() { if (window.crossthinkSystem) window.crossthinkSystem.humanIntervention(); }
-        function requestDeepening() { if (window.crossthinkSystem) window.crossthinkSystem.requestDeepening(); }
-        function redirectDialogue() { if (window.crossthinkSystem) window.crossthinkSystem.redirectDialogue(); }
-        function saveInsight() { if (window.crossthinkSystem) window.crossthinkSystem.saveInsight(); }
-        function quickIntervention(type) { if (window.crossthinkSystem) window.crossthinkSystem.quickIntervention(type); }
-        function exportKnowledge() { if (window.crossthinkSystem) window.crossthinkSystem.exportKnowledge(); }
-        function importKnowledge() { if (window.crossthinkSystem) window.crossthinkSystem.importKnowledge(); }
-        function clearKnowledge() { if (window.crossthinkSystem) window.crossthinkSystem.clearKnowledge(); }
-        function showLearningStats() { if (window.crossthinkSystem) window.crossthinkSystem.showLearningStats(); }
+        function humanIntervention() { if(window.crossthinkSystem) window.crossthinkSystem.humanIntervention(); }
+        function requestDeepening() { if(window.crossthinkSystem) window.crossthinkSystem.requestDeepening(); }
+        function redirectDialogue() { if(window.crossthinkSystem) window.crossthinkSystem.redirectDialogue(); }
+        function saveInsight() { if(window.crossthinkSystem) window.crossthinkSystem.saveInsight(); }
+        function quickIntervention(type) { if(window.crossthinkSystem) window.crossthinkSystem.quickIntervention(type); }
+        function exportKnowledge() { if(window.crossthinkSystem) window.crossthinkSystem.exportKnowledge(); }
+        function importKnowledge() { if(window.crossthinkSystem) window.crossthinkSystem.importKnowledge(); }
+        function clearKnowledge() { if(window.crossthinkSystem) window.crossthinkSystem.clearKnowledge(); }
+        function showLearningStats() { if(window.crossthinkSystem) window.crossthinkSystem.showLearningStats(); }
 
-        // システム初期化
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 window.crossthinkSystem = new CrossthinkAdvanced();
-                console.log('Crossthink統合プラットフォーム v5.0 Advanced Interactive Edition 初期化完了');
-            } catch (error) {
-                console.error('システム初期化エラー:', error);
-                alert('システムの初期化に失敗しました。ページを再読み込みするか、開発者コンソールを確認してください。');
+                console.log('Crossthink v5.0 Initialized');
+            } catch (e) {
+                console.error('Initialization failed:', e);
+                alert('System init failed. Check console.');
             }
         });
 
-        // グローバルエラーハンドラー
-        window.addEventListener('error', (event) => {
-            console.error('未処理のグローバルエラー:', event.error, 'Message:', event.message, 'File:', event.filename, 'Line:', event.lineno);
-            if (window.crossthinkSystem && window.crossthinkSystem.showError) {
-                window.crossthinkSystem.showError(`予期せぬシステムエラーが発生しました: ${event.message}`);
-            } else {
-                // alert(`予期せぬシステムエラーが発生しました。詳細はコンソールを確認してください。\n${event.message}`);
-            }
+        window.addEventListener('error', e => {
+            console.error('Global Error:', e.message, e.filename, e.lineno, e.colno, e.error);
+            if(window.crossthinkSystem?.showError) window.crossthinkSystem.showError(`Unhandled: ${e.message}`);
         });
-
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('未処理のPromise拒否:', event.reason);
-            if (window.crossthinkSystem && window.crossthinkSystem.showWarning) {
-                let message = '非同期処理でエラーが発生しました。';
-                if (event.reason && event.reason.message) {
-                    message += ` ${event.reason.message}`;
-                } else if (typeof event.reason === 'string') {
-                    message += ` ${event.reason}`;
-                }
-                window.crossthinkSystem.showWarning(message);
-            } else {
-                // alert('非同期処理でエラーが発生しました。詳細はコンソールを確認してください。');
-            }
+        window.addEventListener('unhandledrejection', e => {
+            console.error('Unhandled Promise Rejection:', e.reason);
+            if(window.crossthinkSystem?.showWarning) window.crossthinkSystem.showWarning(`Async error: ${e.reason?.message || e.reason}`);
         });
     </script>
 </body>
