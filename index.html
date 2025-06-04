@@ -1,2065 +1,2072 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Crossthink 統合プラットフォーム v5.0 - AI自律対話システム</title>
-   <style>
-       * {
-           margin: 0;
-           padding: 0;
-           box-sizing: border-box;
-       }
-
-       body {
-           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-           min-height: 100vh;
-           padding: 20px;
-       }
-
-       .container {
-           max-width: 1200px;
-           margin: 0 auto;
-           background: rgba(255, 255, 255, 0.95);
-           border-radius: 20px;
-           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-           overflow: hidden;
-       }
-
-       .header {
-           background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-           color: white;
-           padding: 30px;
-           text-align: center;
-       }
-
-       .header h1 {
-           font-size: 2.5em;
-           margin-bottom: 10px;
-           text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-       }
-
-       .header p {
-           font-size: 1.2em;
-           opacity: 0.9;
-       }
-
-       .demo-label {
-           background: rgba(255, 255, 255, 0.2);
-           padding: 10px 20px;
-           border-radius: 25px;
-           display: inline-block;
-           margin-top: 15px;
-           font-weight: bold;
-       }
-
-       .mode-tabs {
-           display: flex;
-           background: #f8f9fa;
-           border-bottom: 2px solid #e9ecef;
-       }
-
-       .tab-button {
-           flex: 1;
-           padding: 20px;
-           border: none;
-           background: transparent;
-           font-size: 16px;
-           font-weight: bold;
-           cursor: pointer;
-           transition: all 0.3s;
-           border-bottom: 3px solid transparent;
-       }
-
-       .tab-button.active {
-           background: white;
-           border-bottom-color: #4facfe;
-           color: #4facfe;
-       }
-
-       .tab-button:hover:not(.active) {
-           background: rgba(79, 172, 254, 0.1);
-       }
-
-       .tab-content {
-           display: none;
-           padding: 30px;
-       }
-
-       .tab-content.active {
-           display: block;
-       }
-
-       /* 自律対話モード */
-       .autonomous-section {
-           background: #f0f8ff;
-           padding: 20px;
-           border-radius: 15px;
-           margin-bottom: 20px;
-           border-left: 4px solid #4facfe;
-       }
-
-       .autonomous-controls {
-           display: grid;
-           grid-template-columns: 1fr 1fr;
-           gap: 20px;
-           margin-bottom: 20px;
-       }
-
-       .control-group {
-           background: white;
-           padding: 15px;
-           border-radius: 10px;
-           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-       }
-
-       .control-group h4 {
-           margin-bottom: 10px;
-           color: #333;
-       }
-
-       .slider-container {
-           margin: 10px 0;
-       }
-
-       .slider-label {
-           display: flex;
-           justify-content: space-between;
-           margin-bottom: 5px;
-           font-size: 0.9em;
-           color: #666;
-       }
-
-       .range-slider {
-           width: 100%;
-           height: 6px;
-           border-radius: 3px;
-           background: linear-gradient(90deg, #ff6b6b, #feca57, #48cae4);
-           outline: none;
-           -webkit-appearance: none;
-       }
-
-       .range-slider::-webkit-slider-thumb {
-           -webkit-appearance: none;
-           appearance: none;
-           width: 20px;
-           height: 20px;
-           border-radius: 50%;
-           background: white;
-           border: 3px solid #4facfe;
-           cursor: pointer;
-           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-       }
-
-       .range-slider::-moz-range-thumb {
-           width: 20px;
-           height: 20px;
-           border-radius: 50%;
-           background: white;
-           border: 3px solid #4facfe;
-           cursor: pointer;
-           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-       }
-
-       /* 人間介入モード */
-       .intervention-section {
-           background: #fff8e1;
-           padding: 20px;
-           border-radius: 15px;
-           margin-bottom: 20px;
-           border-left: 4px solid #ffc107;
-       }
-
-       .human-input-area {
-           background: white;
-           padding: 20px;
-           border-radius: 10px;
-           margin-bottom: 20px;
-           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-       }
-
-       .human-input {
-           width: 100%;
-           min-height: 100px;
-           padding: 15px;
-           border: 2px solid #e9ecef;
-           border-radius: 10px;
-           font-size: 16px;
-           resize: vertical;
-           margin-bottom: 15px;
-       }
-
-       .human-input:focus {
-           outline: none;
-           border-color: #ffc107;
-       }
-
-       .intervention-buttons {
-           display: flex;
-           gap: 10px;
-           flex-wrap: wrap;
-       }
-
-       /* 学習機能 */
-       .learning-section {
-           background: #e8f5e8;
-           padding: 20px;
-           border-radius: 15px;
-           margin-bottom: 20px;
-           border-left: 4px solid #4caf50;
-       }
-
-       .knowledge-base {
-           background: white;
-           padding: 20px;
-           border-radius: 10px;
-           margin-bottom: 20px;
-           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-           max-height: 300px;
-           overflow-y: auto;
-       }
-
-       .knowledge-item {
-           padding: 10px;
-           border-bottom: 1px solid #eee;
-           margin-bottom: 10px;
-       }
-
-       .knowledge-item:last-child {
-           border-bottom: none;
-       }
-
-       .knowledge-topic {
-           font-weight: bold;
-           color: #4caf50;
-           margin-bottom: 5px;
-       }
-
-       .knowledge-content {
-           font-size: 0.9em;
-           color: #666;
-       }
-
-       .quick-buttons {
-           display: grid;
-           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-           gap: 15px;
-           margin-bottom: 20px;
-       }
-
-       .quick-btn {
-           padding: 15px 20px;
-           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-           color: white;
-           border: none;
-           border-radius: 15px;
-           font-size: 16px;
-           font-weight: bold;
-           cursor: pointer;
-           transition: all 0.3s;
-           text-align: left;
-       }
-
-       .quick-btn:hover {
-           transform: translateY(-2px);
-           box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-       }
-
-       .config-section {
-           padding: 30px;
-           background: #f8f9fa;
-           border-bottom: 1px solid #e9ecef;
-       }
-
-       .config-grid {
-           display: grid;
-           grid-template-columns: 1fr 1fr;
-           gap: 20px;
-           margin-bottom: 20px;
-       }
-
-       .api-config {
-           background: white;
-           padding: 20px;
-           border-radius: 15px;
-           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-       }
-
-       .api-config h3 {
-           margin-bottom: 10px;
-           color: #333;
-           display: flex;
-           align-items: center;
-           gap: 10px;
-       }
-
-       .openai-config h3::before {
-           content: "🟢";
-           font-size: 1.2em;
-       }
-
-       .gemini-config h3::before {
-           content: "🔷";
-           font-size: 1.2em;
-       }
-
-       .api-input {
-           width: 100%;
-           padding: 12px;
-           border: 2px solid #e9ecef;
-           border-radius: 10px;
-           font-size: 14px;
-           transition: border-color 0.3s;
-       }
-
-       .api-input:focus {
-           outline: none;
-           border-color: #4facfe;
-       }
-
-       .topic-section {
-           padding: 20px 30px;
-       }
-
-       .topic-input {
-           width: 100%;
-           padding: 15px;
-           border: 2px solid #e9ecef;
-           border-radius: 10px;
-           font-size: 16px;
-           margin-bottom: 20px;
-       }
-
-       .controls {
-           display: flex;
-           gap: 15px;
-           justify-content: center;
-           flex-wrap: wrap;
-       }
-
-       .btn {
-           padding: 12px 24px;
-           border: none;
-           border-radius: 25px;
-           font-size: 16px;
-           font-weight: bold;
-           cursor: pointer;
-           transition: all 0.3s;
-           text-decoration: none;
-           display: inline-flex;
-           align-items: center;
-           gap: 8px;
-       }
-
-       .btn-primary {
-           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-           color: white;
-       }
-
-       .btn-danger {
-           background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
-           color: white;
-       }
-
-       .btn-secondary {
-           background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
-           color: #2d3436;
-       }
-
-       .btn-warning {
-           background: linear-gradient(135deg, #ffc107 0%, #ff8800 100%);
-           color: white;
-       }
-
-       .btn-success {
-           background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-           color: white;
-       }
-
-       .btn:hover {
-           transform: translateY(-2px);
-           box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-       }
-
-       .btn:disabled {
-           opacity: 0.6;
-           cursor: not-allowed;
-           transform: none;
-       }
-
-       .stats-section {
-           padding: 20px 30px;
-           background: #f8f9fa;
-       }
-
-       .stats-grid {
-           display: grid;
-           grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-           gap: 15px;
-       }
-
-       .stat-card {
-           background: white;
-           padding: 20px;
-           border-radius: 15px;
-           text-align: center;
-           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-       }
-
-       .stat-number {
-           font-size: 2.5em;
-           font-weight: bold;
-           margin-bottom: 5px;
-       }
-
-       .stat-label {
-           color: #666;
-           font-size: 0.9em;
-       }
-
-       .openai-stat .stat-number { color: #10a37f; }
-       .gemini-stat .stat-number { color: #4285f4; }
-       .human-stat .stat-number { color: #ffc107; }
-       .learning-stat .stat-number { color: #4caf50; }
-
-       .error-display, .warning-display {
-           padding: 15px;
-           margin: 20px 30px;
-           border-radius: 10px;
-           text-align: center;
-           display: none;
-       }
-
-       .error-display {
-           background: #ff6b6b;
-           color: white;
-       }
-
-       .warning-display {
-           background: #ffa500;
-           color: white;
-       }
-
-       .chat-container {
-           padding: 30px;
-           min-height: 400px;
-           max-height: 600px;
-           overflow-y: auto;
-       }
-
-       .message {
-           margin-bottom: 20px;
-           padding: 20px;
-           border-radius: 15px;
-           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-           animation: fadeIn 0.5s ease-in;
-       }
-
-       @keyframes fadeIn {
-           from { opacity: 0; transform: translateY(20px); }
-           to { opacity: 1; transform: translateY(0); }
-       }
-
-       .message-header {
-           display: flex;
-           align-items: center;
-           gap: 10px;
-           margin-bottom: 10px;
-           font-weight: bold;
-       }
-
-       .message-time {
-           margin-left: auto;
-           font-size: 0.8em;
-           opacity: 0.7;
-       }
-
-       .system-message {
-           background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
-           border-left: 5px solid #fdcb6e;
-       }
-
-       .openai-message {
-           background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
-           border-left: 5px solid #10a37f;
-       }
-
-       .gemini-message {
-           background: linear-gradient(135deg, #b3d9ff 0%, #d4edda 100%);
-           border-left: 5px solid #4285f4;
-       }
-
-       .human-message {
-           background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
-           border-left: 5px solid #ffc107;
-       }
-
-       .learning-message {
-           background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-           border-left: 5px solid #4caf50;
-       }
-
-       .thinking {
-           font-style: italic;
-           opacity: 0.8;
-           color: #666;
-       }
-
-       .intervention-prompt {
-           background: #fffbf0;
-           border: 2px dashed #ffc107;
-           padding: 15px;
-           border-radius: 10px;
-           margin: 10px 0;
-           text-align: center;
-           color: #856404;
-       }
-
-       .deepening-request {
-           background: #f0f8ff;
-           border: 2px dashed #4facfe;
-           padding: 15px;
-           border-radius: 10px;
-           margin: 10px 0;
-           text-align: center;
-           color: #0056b3;
-       }
-
-       .auto-pause-notice {
-           background: #e3f2fd;
-           color: #0d47a1;
-           padding: 10px;
-           border-radius: 8px;
-           margin: 10px 0;
-           border-left: 4px solid #2196f3;
-       }
-
-       .monetization-info {
-           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-           color: white;
-           padding: 20px;
-           margin: 20px 30px;
-           border-radius: 15px;
-       }
-
-       .monetization-info h3 {
-           margin-bottom: 15px;
-           font-size: 1.2em;
-       }
-
-       .monetization-info ul {
-           list-style: none;
-           padding: 0;
-       }
-
-       .monetization-info li {
-           padding: 5px 0;
-           padding-left: 25px;
-           position: relative;
-       }
-
-       .monetization-info li::before {
-           content: "🚀";
-           position: absolute;
-           left: 0;
-       }
-
-       @media (max-width: 768px) {
-           .config-grid, .quick-buttons, .autonomous-controls {
-               grid-template-columns: 1fr;
-           }
-           
-           .controls, .intervention-buttons {
-               flex-direction: column;
-               align-items: center;
-           }
-           
-           .btn {
-               width: 100%;
-               max-width: 300px;
-           }
-
-           .mode-tabs {
-               flex-direction: column;
-           }
-
-           .tab-button {
-               border-bottom: none;
-               border-right: 3px solid transparent;
-           }
-
-           .tab-button.active {
-               border-right-color: #4facfe;
-               border-bottom: none;
-           }
-       }
-   </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crossthink 統合プラットフォーム v5.0 - AI自律対話システム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .demo-label {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .mode-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button.active {
+            background: white;
+            border-bottom-color: #4facfe;
+            color: #4facfe;
+        }
+
+        .tab-button:hover:not(.active) {
+            background: rgba(79, 172, 254, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 自律対話モード */
+        .autonomous-section {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .autonomous-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-group h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .slider-container {
+            margin: 10px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .range-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48cae4);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #4facfe;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #4facfe;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 人間介入モード */
+        .intervention-section {
+            background: #fff8e1;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .human-input-area {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .human-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .human-input:focus {
+            outline: none;
+            border-color: #ffc107;
+        }
+
+        .intervention-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* 学習機能 */
+        .learning-section {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .knowledge-base {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .knowledge-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+
+        .knowledge-item:last-child {
+            border-bottom: none;
+        }
+
+        .knowledge-topic {
+            font-weight: bold;
+            color: #4caf50;
+            margin-bottom: 5px;
+        }
+
+        .knowledge-content {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .quick-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .config-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .api-config {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .api-config h3 {
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .openai-config h3::before {
+            content: "🟢";
+            font-size: 1.2em;
+        }
+
+        .gemini-config h3::before {
+            content: "🔷";
+            font-size: 1.2em;
+        }
+
+        .api-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .api-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .topic-section {
+            padding: 20px 30px;
+        }
+
+        .topic-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            color: #2d3436;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #ff8800 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-section {
+            padding: 20px 30px;
+            background: #f8f9fa;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .openai-stat .stat-number { color: #10a37f; }
+        .gemini-stat .stat-number { color: #4285f4; }
+        .human-stat .stat-number { color: #ffc107; }
+        .learning-stat .stat-number { color: #4caf50; }
+
+        .error-display, .warning-display {
+            padding: 15px;
+            margin: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-display {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .warning-display {
+            background: #ffa500;
+            color: white;
+        }
+
+        .chat-container {
+            padding: 30px;
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .message-time {
+            margin-left: auto;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        .system-message {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            border-left: 5px solid #fdcb6e;
+        }
+
+        .openai-message {
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
+            border-left: 5px solid #10a37f;
+        }
+
+        .gemini-message {
+            background: linear-gradient(135deg, #b3d9ff 0%, #d4edda 100%);
+            border-left: 5px solid #4285f4;
+        }
+
+        .human-message {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+            border-left: 5px solid #ffc107;
+        }
+
+        .learning-message {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-left: 5px solid #4caf50;
+        }
+
+        .thinking {
+            font-style: italic;
+            opacity: 0.8;
+            color: #666;
+        }
+
+        .intervention-prompt {
+            background: #fffbf0;
+            border: 2px dashed #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            color: #856404;
+        }
+
+        .deepening-request {
+            background: #f0f8ff;
+            border: 2px dashed #4facfe;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            color: #0056b3;
+        }
+
+        .auto-pause-notice {
+            background: #e3f2fd;
+            color: #0d47a1;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .monetization-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 20px 30px;
+            border-radius: 15px;
+        }
+
+        .monetization-info h3 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .monetization-info ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .monetization-info li {
+            padding: 5px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .monetization-info li::before {
+            content: "🚀";
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .config-grid, .quick-buttons, .autonomous-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls, .intervention-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .mode-tabs {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                border-bottom: none;
+                border-right: 3px solid transparent;
+            }
+
+            .tab-button.active {
+                border-right-color: #4facfe;
+                border-bottom: none;
+            }
+        }
+    </style>
 </head>
 <body>
-   <div class="container">
-       <div class="header">
-           <h1>🌟 Crossthink 統合プラットフォーム</h1>
-           <p>AI自律対話・人間介入・学習機能搭載システム</p>
-           <div class="demo-label">
-               🚀 v5.0 - Advanced Interactive Edition
-           </div>
-       </div>
-
-       <div class="mode-tabs">
-           <button class="tab-button active" onclick="switchTab('autonomous')">
-               🤖 AI自律対話
-           </button>
-           <button class="tab-button" onclick="switchTab('intervention')">
-               👤 人間介入モード
-           </button>
-           <button class="tab-button" onclick="switchTab('learning')">
-               🧠 学習機能
-           </button>
-       </div>
-
-       <!-- AI自律対話タブ -->
-       <div id="autonomous-tab" class="tab-content active">
-           <div class="autonomous-section">
-               <h3>🤖 AI自律対話設定</h3>
-               <div class="autonomous-controls">
-                   <div class="control-group">
-                       <h4>🎯 対話モード</h4>
-                       <div class="slider-container">
-                           <div class="slider-label">
-                               <span>🏠 実用的</span>
-                               <span>💼 ビジネス</span>
-                               <span>🧠 哲学的</span>
-                           </div>
-                           <input type="range" id="targetModeSlider" class="range-slider" min="0" max="100" value="33">
-                       </div>
-                       
-                       <div class="slider-container">
-                           <div class="slider-label">
-                               <span>💡 案出し</span>
-                               <span>🤝 合意形成</span>
-                               <span>🔍 探索</span>
-                           </div>
-                           <input type="range" id="goalModeSlider" class="range-slider" min="0" max="100" value="50">
-                       </div>
-                   </div>
-
-                   <div class="control-group">
-                       <h4>⚙️ 自律対話設定</h4>
-                       <div class="slider-container">
-                           <div class="slider-label">
-                               <span>短時間集中</span>
-                               <span id="autonomyLengthLabel">標準 (8メッセージ)</span>
-                               <span>深い探求</span>
-                           </div>
-                           <input type="range" id="autonomyLengthSlider" class="range-slider" min="4" max="20" value="8">
-                       </div>
-                       
-                       <div class="slider-container">
-                           <div class="slider-label">
-                               <span>人間介入: なし</span>
-                               <span id="interventionFreqLabel">中程度</span>
-                               <span>頻繁</span>
-                           </div>
-                           <input type="range" id="interventionFreqSlider" class="range-slider" min="0" max="10" value="3">
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </div>
-
-       <!-- 人間介入タブ -->
-       <div id="intervention-tab" class="tab-content">
-           <div class="intervention-section">
-               <h3>👤 人間介入コントロール</h3>
-               <div class="human-input-area">
-                   <h4>💬 あなたの発言</h4>
-                   <textarea id="humanInput" class="human-input" 
-                            placeholder="AIの対話に介入したい内容を入力してください。質問、指摘、新しい視点の提供など、自由に発言できます。"></textarea>
-                   
-                   <div class="intervention-buttons">
-                       <button class="btn btn-warning" onclick="humanIntervention()">
-                           💬 対話に介入
-                       </button>
-                       <button class="btn btn-secondary" onclick="requestDeepening()">
-                           🔍 論点を深掘り要求
-                       </button>
-                       <button class="btn btn-primary" onclick="redirectDialogue()">
-                           🎯 対話の方向転換
-                       </button>
-                       <button class="btn btn-success" onclick="saveInsight()">
-                           💡 洞察を学習データに保存
-                       </button>
-                   </div>
-               </div>
-               
-               <div class="quick-buttons">
-                   <button class="quick-btn" onclick="quickIntervention('具体例')">
-                       📝 「具体例を教えて」
-                   </button>
-                   <button class="quick-btn" onclick="quickIntervention('反対意見')">
-                       🔄 「反対の視点では？」
-                   </button>
-                   <button class="quick-btn" onclick="quickIntervention('実用性')">
-                       🛠️ 「実用性を重視して」
-                   </button>
-                   <button class="quick-btn" onclick="quickIntervention('簡潔に')">
-                       ✂️ 「もっと簡潔に」
-                   </button>
-               </div>
-           </div>
-       </div>
-
-       <!-- 学習機能タブ -->
-       <div id="learning-tab" class="tab-content">
-           <div class="learning-section">
-               <h3>🧠 汎用AI学習機能</h3>
-               <div class="knowledge-base" id="knowledgeBase">
-                   <div class="knowledge-item">
-                       <div class="knowledge-topic">システム初期化</div>
-                       <div class="knowledge-content">Crossthink v5.0 学習機能が有効化されました。対話から得られた洞察を自動学習します。</div>
-                   </div>
-               </div>
-               
-               <div class="controls">
-                   <button class="btn btn-success" onclick="exportKnowledge()">
-                       📤 学習データエクスポート
-                   </button>
-                   <button class="btn btn-primary" onclick="importKnowledge()">
-                       📥 学習データインポート
-                   </button>
-                   <button class="btn btn-warning" onclick="clearKnowledge()">
-                       🗑️ 学習データクリア
-                   </button>
-                   <button class="btn btn-secondary" onclick="showLearningStats()">
-                       📊 学習統計表示
-                   </button>
-               </div>
-           </div>
-       </div>
-
-       <div class="config-section">
-           <h2>🔧 API設定</h2>
-           <div class="config-grid">
-               <div class="api-config openai-config">
-                   <h3>OpenAI API Key:</h3>
-                   <input type="password" id="openaiKey" class="api-input" placeholder="sk-proj-...">
-               </div>
-               <div class="api-config gemini-config">
-                   <h3>Gemini API Key:</h3>
-                   <input type="password" id="geminiKey" class="api-input" placeholder="AIza...">
-               </div>
-           </div>
-       </div>
-
-       <div class="topic-section">
-           <h2>📝 対話トピック:</h2>
-           <input type="text" id="topicInput" class="topic-input" 
-                  placeholder="AI同士に対話させたいトピックを入力してください" 
-                  value="AI時代における人間の創造性とは何か？">
-           
-           <div class="controls">
-               <button id="startBtn" class="btn btn-primary">🚀 対話開始</button>
-               <button id="pauseBtn" class="btn btn-warning" disabled>⏸️ 一時停止</button>
-               <button id="stopBtn" class="btn btn-danger" disabled>⏹️ 停止</button>
-               <button id="clearBtn" class="btn btn-secondary">🗑️ クリア</button>
-               <button id="exportBtn" class="btn btn-secondary">📝 要約生成</button>
-           </div>
-       </div>
-
-       <div class="stats-section">
-           <h2>📊 対話統計</h2>
-           <div class="stats-grid">
-               <div class="stat-card">
-                   <div class="stat-number" id="totalMessages">0</div>
-                   <div class="stat-label">総メッセージ数</div>
-               </div>
-               <div class="stat-card openai-stat">
-                   <div class="stat-number" id="openaiMessages">0</div>
-                   <div class="stat-label">ChatGPT発言</div>
-               </div>
-               <div class="stat-card gemini-stat">
-                   <div class="stat-number" id="geminiMessages">0</div>
-                   <div class="stat-label">Gemini発言</div>
-               </div>
-               <div class="stat-card human-stat">
-                   <div class="stat-number" id="humanMessages">0</div>
-                   <div class="stat-label">人間介入</div>
-               </div>
-               <div class="stat-card learning-stat">
-                   <div class="stat-number" id="learningItems">1</div>
-                   <div class="stat-label">学習アイテム</div>
-               </div>
-               <div class="stat-card">
-                   <div class="stat-number" id="elapsed">0</div>
-                   <div class="stat-label">経過時間(秒)</div>
-               </div>
-           </div>
-       </div>
-
-       <div class="error-display" id="errorDisplay"></div>
-       <div class="warning-display" id="warningDisplay"></div>
-
-       <div class="monetization-info">
-           <h3>🚀 v5.0 Advanced Interactive Edition の特徴:</h3>
-           <ul>
-               <li>AI同士の自律対話システム：設定可能な対話長と介入頻度</li>
-               <li>リアルタイム人間介入：対話の流れを変える強力な介入機能</li>
-               <li>汎用学習機能：対話から得られた洞察を自動学習・蓄積</li>
-               <li>深掘り要求システム：特定の論点を深く探求</li>
-               <li>方向転換機能：対話の流れを戦略的にコントロール</li>
-               <li>学習データ管理：エクスポート・インポート機能付き</li>
-           </ul>
-       </div>
-
-       <div class="chat-container" id="chatContainer">
-           <!-- 対話がここに表示されます -->
-       </div>
-   </div>
-
-   <script>
-       class CrossthinkAdvanced {
-           constructor() {
-               this.isRunning = false;
-               this.isPaused = false;
-               this.messageCount = 0;
-               this.openaiCount = 0;
-               this.geminiCount = 0;
-               this.humanCount = 0;
-               this.startTime = null;
-               this.currentSpeaker = 'openai';
-               this.conversationHistory = [];
-               this.maxMessages = 8;
-               this.interventionPoints = [];
-               this.knowledgeBase = new Map();
-               this.waitingForIntervention = false;
-               
-               // モード設定
-               this.targetMode = 'philosophical';
-               this.goalMode = 'exploration';
-               this.interventionFrequency = 3;
-               this.currentTab = 'autonomous';
-               
-               // 学習機能
-               this.learningEnabled = true;
-               this.autoLearnKeywords = ['重要', '本質', '核心', '結論', '発見', '洞察', '革新'];
-               
-               this.initializeElements();
-               this.bindEvents();
-               this.showWelcomeMessage();
-               this.initializeKnowledgeBase();
-               this.updateSliderLabels();
-           }
-
-           initializeElements() {
-               this.elements = {
-                   openaiKey: document.getElementById('openaiKey'),
-                   geminiKey: document.getElementById('geminiKey'),
-                   topicInput: document.getElementById('topicInput'),
-                   startBtn: document.getElementById('startBtn'),
-                   pauseBtn: document.getElementById('pauseBtn'),
-                   stopBtn: document.getElementById('stopBtn'),
-                   clearBtn: document.getElementById('clearBtn'),
-                   exportBtn: document.getElementById('exportBtn'),
-                   chatContainer: document.getElementById('chatContainer'),
-                   errorDisplay: document.getElementById('errorDisplay'),
-                   warningDisplay: document.getElementById('warningDisplay'),
-                   totalMessages: document.getElementById('totalMessages'),
-                   openaiMessages: document.getElementById('openaiMessages'),
-                   geminiMessages: document.getElementById('geminiMessages'),
-                   humanMessages: document.getElementById('humanMessages'),
-                   learningItems: document.getElementById('learningItems'),
-                   elapsed: document.getElementById('elapsed'),再試行M続ける編集ジャバスクリプト                   // スライダー要素
-                   targetModeSlider: document.getElementById('targetModeSlider'),
-                   goalModeSlider: document.getElementById('goalModeSlider'),
-                   autonomyLengthSlider: document.getElementById('autonomyLengthSlider'),
-                   interventionFreqSlider: document.getElementById('interventionFreqSlider'),
-                   autonomyLengthLabel: document.getElementById('autonomyLengthLabel'),
-                   interventionFreqLabel: document.getElementById('interventionFreqLabel'),
-                   
-                   // 人間介入要素
-                   humanInput: document.getElementById('humanInput'),
-                   
-                   // 学習機能要素
-                   knowledgeBase: document.getElementById('knowledgeBase')
-               };
-           }
-
-           bindEvents() {
-               this.elements.startBtn.addEventListener('click', () => this.startDialogue());
-               this.elements.pauseBtn.addEventListener('click', () => this.pauseDialogue());
-               this.elements.stopBtn.addEventListener('click', () => this.stopDialogue());
-               this.elements.clearBtn.addEventListener('click', () => this.clearChat());
-               this.elements.exportBtn.addEventListener('click', () => this.generateSummaryPrompt());
-               
-               // スライダーイベント
-               this.elements.targetModeSlider.addEventListener('input', () => this.updateTargetMode());
-               this.elements.goalModeSlider.addEventListener('input', () => this.updateGoalMode());
-               this.elements.autonomyLengthSlider.addEventListener('input', () => this.updateAutonomyLength());
-               this.elements.interventionFreqSlider.addEventListener('input', () => this.updateInterventionFreq());
-               
-               // Enterキーでの介入
-               this.elements.humanInput.addEventListener('keydown', (e) => {
-                   if (e.key === 'Enter' && e.ctrlKey) {
-                       this.humanIntervention();
-                   }
-               });
-           }
-
-           updateSliderLabels() {
-               // 対話長ラベル更新
-               this.elements.autonomyLengthSlider.addEventListener('input', () => {
-                   const value = this.elements.autonomyLengthSlider.value;
-                   this.elements.autonomyLengthLabel.textContent = `${value}メッセージ`;
-                   this.maxMessages = parseInt(value);
-               });
-               
-               // 介入頻度ラベル更新
-               this.elements.interventionFreqSlider.addEventListener('input', () => {
-                   const value = parseInt(this.elements.interventionFreqSlider.value);
-                   const labels = ['なし', '稀', '少', '中', '多', '頻繁', '非常に頻繁', '常時', 'リアルタイム', 'シンクロ', 'フル介入'];
-                   this.elements.interventionFreqLabel.textContent = labels[value] || '中程度';
-                   this.interventionFrequency = value;
-               });
-           }
-
-           updateTargetMode() {
-               const value = parseInt(this.elements.targetModeSlider.value);
-               if (value < 33) this.targetMode = 'practical';
-               else if (value < 66) this.targetMode = 'business';
-               else this.targetMode = 'philosophical';
-           }
-
-           updateGoalMode() {
-               const value = parseInt(this.elements.goalModeSlider.value);
-               if (value < 33) this.goalMode = 'ideation';
-               else if (value < 66) this.goalMode = 'consensus';
-               else this.goalMode = 'exploration';
-           }
-
-           updateAutonomyLength() {
-               this.maxMessages = parseInt(this.elements.autonomyLengthSlider.value);
-           }
-
-           updateInterventionFreq() {
-               this.interventionFrequency = parseInt(this.elements.interventionFreqSlider.value);
-           }
-
-           initializeKnowledgeBase() {
-               this.knowledgeBase.set('system_init', {
-                   topic: 'システム初期化',
-                   content: 'Crossthink v5.0 Advanced Interactive Edition が初期化されました。',
-                   timestamp: new Date(),
-                   source: 'system'
-               });
-               this.updateKnowledgeDisplay();
-           }
-
-           showWelcomeMessage() {
-               this.addMessage('system', 
-                   'Crossthink 統合プラットフォーム v5.0 Advanced Interactive Edition へようこそ！\n\n' +
-                   '🚀 v5.0 の新機能:\n' +
-                   '• 🤖 AI自律対話: AIが自主的に議論を展開\n' +
-                   '• 👤 人間介入: リアルタイムで対話に参加可能\n' +
-                   '• 🧠 学習機能: 対話から洞察を自動学習・蓄積\n' +
-                   '• 🔍 深掘り要求: 特定の論点を詳しく探求\n' +
-                   '• 🎯 方向転換: 対話の流れを戦略的にコントロール\n\n' +
-                   '💡 使い方:\n' +
-                   '1. タブを切り替えて機能を設定\n' +
-                   '2. AI自律対話でパラメータ調整\n' +
-                   '3. APIキーを設定してトピック入力\n' +
-                   '4. 対話開始後、いつでも介入可能\n\n' +
-                   '🎯 Advanced Features:\n' +
-                   '📈 リアルタイム学習システム\n' +
-                   '🎓 人間-AI協働最適化\n' +
-                   '💡 動的な洞察抽出\n' +
-                   '🔬 進化する対話品質'
-               );
-           }
-
-           async startDialogue() {
-               if (!this.validateInputs()) return;
-
-               this.isRunning = true;
-               this.isPaused = false;
-               this.startTime = Date.now();
-               this.currentSpeaker = 'openai';
-               this.conversationHistory = [];
-               this.interventionPoints = [];
-               
-               this.elements.startBtn.disabled = true;
-               this.elements.pauseBtn.disabled = false;
-               this.elements.stopBtn.disabled = false;
-               this.hideError();
-               this.hideWarning();
-
-               const topic = this.elements.topicInput.value.trim();
-               
-               this.addMessage('system', 
-                   `🚀 AI自律対話開始\n` +
-                   `📝 トピック: "${topic}"\n` +
-                   `🎪 モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}\n` +
-                   `⏱️ 最大メッセージ数: ${this.maxMessages}\n` +
-                   `👤 介入設定: ${this.getInterventionLabel()}\n` +
-                   `🧠 学習機能: 有効\n` +
-                   `🤖 AIが自律的に議論を開始します...`
-               );
-
-               // 学習データに対話開始を記録
-               this.learnFromDialogue('対話開始', `新しい対話が開始されました: ${topic}`);
-
-               this.startTimer();
-
-               // 初期プロンプト生成
-               const initialPrompt = this.generateInitialPrompt(topic);
-               await this.sendMessage('openai', initialPrompt);
-           }
-
-           generateInitialPrompt(topic) {
-               const basePrompt = this.generateModeSpecificPrompt(topic);
-               
-               const autonomyInstructions = `\n\n🤖 **自律対話指示 (v5.0)**:\n` +
-                   `• あなたはChatGPT(OpenAI)です\n` +
-                   `• Geminiと${this.maxMessages}メッセージで建設的な議論を行います\n` +
-                   `• ${this.getInterventionDescription()}\n` +
-                   `• 質の高い洞察を提供し、議論を深化させてください\n` +
-                   `• 人間が介入した場合は、その視点を尊重して議論に取り入れてください`;
-
-               return basePrompt + autonomyInstructions;
-           }
-
-           generateModeSpecificPrompt(topic) {
-               const modePrompts = {
-                   'practical-ideation': `「${topic}」について実用的なアイデアを提案してください。`,
-                   'practical-consensus': `「${topic}」について実用的な合意点を見つけましょう。`,
-                   'practical-exploration': `「${topic}」の実用的側面を深く探求してください。`,
-                   'business-ideation': `「${topic}」について革新的なビジネス視点を提供してください。`,
-                   'business-consensus': `「${topic}」についてビジネス的な最適解を導きましょう。`,
-                   'business-exploration': `「${topic}」のビジネス価値を深く分析してください。`,
-                   'philosophical-ideation': `「${topic}」について哲学的な新しい思考を提示してください。`,
-                   'philosophical-consensus': `「${topic}」について哲学的な深い理解を共有しましょう。`,
-                   'philosophical-exploration': `「${topic}」について根源的な探求を行いましょう。`
-               };
-               
-               const key = `${this.targetMode}-${this.goalMode}`;
-               return modePrompts[key] || `「${topic}」について深く議論しましょう。`;
-           }
-
-           getInterventionDescription() {
-               if (this.interventionFrequency === 0) return '人間の介入はありません';
-               if (this.interventionFrequency <= 2) return '稀に人間が介入する可能性があります';
-               if (this.interventionFrequency <= 5) return '時々人間が議論に参加する可能性があります';
-               if (this.interventionFrequency <= 8) return '頻繁に人間が対話に介入します';
-               return '人間がリアルタイムで対話をリードします';
-           }
-
-           validateInputs() {
-               const openaiKey = this.elements.openaiKey.value.trim();
-               const geminiKey = this.elements.geminiKey.value.trim();
-               const topic = this.elements.topicInput.value.trim();
-
-               if (!openaiKey) {
-                   this.showError('OpenAI API キーを入力してください');
-                   return false;
-               }
-
-               if (!geminiKey) {
-                   this.showError('Gemini API キーを入力してください');
-                   return false;
-               }
-
-               if (!topic) {
-                   this.showError('対話トピックを入力してください');
-                   return false;
-               }
-
-               return true;
-           }
-
-           async sendMessage(provider, prompt, isHumanIntervention = false) {
-               if (!this.isRunning || this.isPaused) return;
-
-               try {
-                   this.addMessage(provider, '思考中...', true);
-                   
-                   let response;
-                   if (provider === 'openai') {
-                       response = await this.callOpenAI(prompt);
-                       this.openaiCount++;
-                   } else if (provider === 'gemini') {
-                       response = await this.callGemini(prompt);
-                       this.geminiCount++;
-                   }
-
-                   this.removeLastMessage();
-                   this.addMessage(provider, response);
-                   this.conversationHistory.push({ provider, message: response, timestamp: new Date() });
-                   this.updateStats();
-
-                   // 学習機能: 重要な洞察を自動学習
-                   this.autoLearnFromMessage(response, provider);
-
-                   // 介入ポイントの判定
-                   if (this.shouldTriggerIntervention() && !isHumanIntervention) {
-                       this.triggerInterventionPrompt();
-                       return;
-                   }
-
-                   // 次のAIに応答させる
-                   if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages) {
-                       setTimeout(() => {
-                           const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
-                           const nextPrompt = this.generateNextPrompt(nextProvider, response);
-                           this.sendMessage(nextProvider, nextPrompt);
-                       }, 2000);
-                   } else if (this.messageCount >= this.maxMessages) {
-                       this.addMessage('system', '🎯 設定されたメッセージ数に到達しました。対話を終了します。');
-                       this.stopDialogue();
-                   }
-
-               } catch (error) {
-                   this.removeLastMessage();
-                   this.showError(`エラーが発生しました: ${error.message}`);
-                   console.error('API Error:', error);
-               }
-           }
-
-           shouldTriggerIntervention() {
-               if (this.interventionFrequency === 0) return false;
-               if (this.waitingForIntervention) return false;
-               
-               // 介入頻度に基づく確率的判定
-               const interventionProbability = this.interventionFrequency / 10;
-               const shouldIntervene = Math.random() < interventionProbability;
-               
-               // または特定のメッセージ数での強制介入
-               const forceInterventionPoints = [3, 6, 9, 12];
-               const forceIntervention = forceInterventionPoints.includes(this.messageCount) && 
-                                        this.interventionFrequency >= 5;
-               
-               return shouldIntervene || forceIntervention;
-           }
-
-           triggerInterventionPrompt() {
-               this.waitingForIntervention = true;
-               this.isPaused = true;
-               
-               const interventionDiv = document.createElement('div');
-               interventionDiv.className = 'intervention-prompt';
-               interventionDiv.innerHTML = `
-                   <h4>👤 人間介入のタイミングです</h4>
-                   <p>AIの対話に何か追加したい視点はありますか？</p>
-                   <button class="btn btn-warning" onclick="continueAutonomously()">
-                       🤖 AIに続行させる
-                   </button>
-                   <button class="btn btn-primary" onclick="switchToInterventionTab()">
-                       👤 介入する
-                   </button>
-               `;
-               
-               this.elements.chatContainer.appendChild(interventionDiv);
-               this.elements.chatContainer.scrollTop = this.elements.chatContainer.scrollHeight;
-           }
-
-           generateNextPrompt(provider, previousMessage) {
-               const otherProvider = provider === 'openai' ? 'Gemini' : 'ChatGPT';
-               const originalTopic = this.elements.topicInput.value.trim();
-               
-               let basePrompt = `${otherProvider}が以下のように述べました：\n\n"${previousMessage}"\n\n`;
-               
-               const roleInstruction = this.getProviderRoleInstruction(provider);
-               const contextualInstruction = this.getContextualInstruction();
-               
-               return basePrompt + roleInstruction + contextualInstruction;
-           }
-
-           getProviderRoleInstruction(provider) {
-               const instructions = {
-                   'openai': {
-                       'practical': '🏠 **実用的視点（ChatGPT）**: 具体的で実行可能な提案を重視してください。',
-                       'business': '💼 **ビジネス視点（ChatGPT）**: 市場価値と実現可能性を明確にしてください。',
-                       'philosophical': '🧠 **哲学的視点（ChatGPT）**: 深い洞察と新しい視点を提供してください。'
-                   },
-                   'gemini': {
-                       'practical': '🔧 **分析的検証（Gemini）**: 論理的に検証し、構造化された回答をしてください。',
-                       'business': '📊 **戦略的分析（Gemini）**: データに基づいた戦略的判断をしてください。',
-                       'philosophical': '🔍 **批判的考察（Gemini）**: 概念を精査し、論理的整合性を重視してください。'
-                   }
-               };
-
-               return instructions[provider]?.[this.targetMode] || '建設的で洞察に富む応答をお願いします。';
-           }
-
-           getContextualInstruction() {
-               return `\n\n🎯 **対話促進指示**:\n` +
-                   `• 相手の意見を踏まえて、さらに議論を深化させる\n` +
-                   `• 新しい視点や疑問を提起する\n` +
-                   `• 具体例や実例を交えて説得力を高める\n` +
-                   `• ${this.maxMessages}メッセージの制限内で価値ある議論を行う`;
-           }
-
-           // 人間介入機能
-           humanIntervention() {
-               const humanMessage = this.elements.humanInput.value.trim();
-               if (!humanMessage) {
-                   this.showError('介入内容を入力してください');
-                   return;
-               }
-
-               this.addMessage('human', humanMessage);
-               this.humanCount++;
-               this.updateStats();
-               
-               // 学習データに記録
-               this.learnFromDialogue('人間介入', humanMessage);
-               
-               // 介入後のAI応答を促す
-               const interventionPrompt = this.generateInterventionResponse(humanMessage);
-               
-               // 現在のAIに介入内容を伝える
-               const currentProvider = this.currentSpeaker;
-               this.sendMessage(currentProvider, interventionPrompt, true);
-               
-               // 入力欄をクリア
-               this.elements.humanInput.value = '';
-               
-               // 介入待機状態を解除
-               this.waitingForIntervention = false;
-               this.isPaused = false;
-               
-               // 介入プロンプトを削除
-               const interventionPrompts = this.elements.chatContainer.querySelectorAll('.intervention-prompt');
-               interventionPrompts.forEach(prompt => prompt.remove());
-           }
-
-           generateInterventionResponse(humanMessage) {
-               return `\n\n👤 **人間の介入**:\n"${humanMessage}"\n\n` +
-                   `🤖 **応答指示**:\n` +
-                   `• 人間の視点を真摯に受け止めて応答してください\n` +
-                   `• 必要に応じて議論の方向性を修正してください\n` +
-                   `• 人間の指摘や質問に具体的に答えてください\n` +
-                   `• この介入を踏まえて対話相手（他のAI）との議論を継続してください`;
-           }
-
-           requestDeepening() {
-               const lastMessages = this.conversationHistory.slice(-2);
-               if (lastMessages.length === 0) {
-                   this.showError('まず対話を開始してください');
-                   return;
-               }
-
-               const deepeningRequest = `前回の議論のポイントをより深く探求してください。` +
-                   `具体例、実証データ、異なる視点からの検証など、多角的に深掘りして議論を豊かにしてください。`;
-
-               this.addMessage('system', '🔍 **深掘り要求**: AIに前回の論点のより深い探求を依頼しました');
-               
-               const deepeningPrompt = `\n\n🔍 **深掘り要求**:\n${deepeningRequest}\n\n` +
-                   `前回の議論: "${lastMessages[lastMessages.length - 1].message.substring(0, 200)}..."\n\n` +
-                   `この論点について、より詳細で深い分析を提供してください。`;
-
-               this.sendMessage(this.currentSpeaker, deepeningPrompt, true);
-               this.learnFromDialogue('深掘り要求', deepeningRequest);
-           }
-
-           redirectDialogue() {
-               const redirectionText = this.elements.humanInput.value.trim() || 
-                   '議論の方向を変えて、より実用的な側面に焦点を当ててください';
-
-               this.addMessage('human', `🎯 **方向転換要求**: ${redirectionText}`);
-               this.humanCount++;
-               this.updateStats();
-
-               const redirectionPrompt = `\n\n🎯 **対話方向転換**:\n"${redirectionText}"\n\n` +
-                   `議論の流れを上記の方向に調整し、新しい視点から議論を継続してください。`;
-
-               this.sendMessage(this.currentSpeaker, redirectionPrompt, true);
-               this.learnFromDialogue('方向転換', redirectionText);
-               this.elements.humanInput.value = '';
-           }
-
-           saveInsight() {
-               const insightText = this.elements.humanInput.value.trim();
-               if (!insightText) {
-                   this.showError('保存する洞察を入力してください');
-                   return;
-               }
-
-               const timestamp = new Date();
-               const insightId = `insight_${timestamp.getTime()}`;
-               
-               this.knowledgeBase.set(insightId, {
-                   topic: '人間の洞察',
-                   content: insightText,
-                   timestamp: timestamp,
-                   source: 'human_insight'
-               });
-
-               this.updateKnowledgeDisplay();
-               this.updateStats();
-               
-               this.addMessage('learning', `💡 洞察を学習データに保存しました: "${insightText}"`);
-               this.elements.humanInput.value = '';
-           }
-
-           quickIntervention(type) {
-               const quickMessages = {
-                   '具体例': '具体例を教えてください。実際の事例やデータがあると理解が深まります。',
-                   '反対意見': '反対の視点からはどう見えるでしょうか？批判的な見解も聞かせてください。',
-                   '実用性': '実用性を重視してください。実際に使える形での提案をお願いします。',
-                   '簡潔に': 'もっと簡潔にまとめてください。要点を絞って説明してください。'
-               };
-
-               this.elements.humanInput.value = quickMessages[type] || '';
-               this.humanIntervention();
-           }
-
-           // 学習機能
-           autoLearnFromMessage(message, provider) {
-               if (!this.learningEnabled) return;
-
-               // キーワードベースの重要度判定
-               const hasImportantKeywords = this.autoLearnKeywords.some(keyword => 
-                   message.includes(keyword));
-
-               if (hasImportantKeywords || message.length > 300) {
-                   const timestamp = new Date();
-                   const learnId = `auto_${provider}_${timestamp.getTime()}`;
-                   
-                   // 重要部分を抽出（簡易版）
-                   const importantPart = this.extractImportantPart(message);
-                   
-                   this.knowledgeBase.set(learnId, {
-                       topic: `${provider}の洞察`,
-                       content: importantPart,
-                       timestamp: timestamp,
-                       source: `auto_${provider}`,
-                       fullMessage: message
-                   });
-
-                   this.updateKnowledgeDisplay();
-                   this.updateStats();
-               }
-           }
-
-           extractImportantPart(message) {
-               // 重要キーワードを含む文を抽出
-               const sentences = message.split(/[。．！？\n]/);
-               const importantSentences = sentences.filter(sentence => 
-                   this.autoLearnKeywords.some(keyword => sentence.includes(keyword)) ||
-                   sentence.length > 50
-               );
-
-               return importantSentences.slice(0, 2).join('。') + '。';
-           }
-
-           learnFromDialogue(topic, content) {
-               const timestamp = new Date();
-               const learnId = `dialogue_${timestamp.getTime()}`;
-               
-               this.knowledgeBase.set(learnId, {
-                   topic: topic,
-                   content: content,
-                   timestamp: timestamp,
-                   source: 'dialogue'
-               });
-
-               this.updateKnowledgeDisplay();
-               this.updateStats();
-           }
-
-           updateKnowledgeDisplay() {
-               const knowledgeContainer = this.elements.knowledgeBase;
-               knowledgeContainer.innerHTML = '';
-
-               // 最新のものから表示
-               const sortedItems = Array.from(this.knowledgeBase.entries())
-                   .sort((a, b) => b[1].timestamp - a[1].timestamp)
-                   .slice(0, 10); // 最新10件
-
-               sortedItems.forEach(([id, item]) => {
-                   const itemDiv = document.createElement('div');
-                   itemDiv.className = 'knowledge-item';
-                   itemDiv.innerHTML = `
-                       <div class="knowledge-topic">${item.topic}</div>
-                       <div class="knowledge-content">${item.content.substring(0, 100)}${item.content.length > 100 ? '...' : ''}</div>
-                       <div style="font-size: 0.8em; color: #999; margin-top: 5px;">
-                           ${item.timestamp.toLocaleString()} | ${item.source}
-                       </div>
-                   `;
-                   knowledgeContainer.appendChild(itemDiv);
-               });
-           }
-
-           exportKnowledge() {
-               const knowledgeArray = Array.from(this.knowledgeBase.entries()).map(([id, item]) => ({
-                   id,
-                   ...item,
-                   timestamp: item.timestamp.toISOString()
-               }));
-
-               const dataStr = JSON.stringify(knowledgeArray, null, 2);
-               const dataBlob = new Blob([dataStr], { type: 'application/json' });
-               const url = URL.createObjectURL(dataBlob);
-               
-               const link = document.createElement('a');
-               link.href = url;
-               link.download = `crossthink_knowledge_${new Date().toISOString().split('T')[0]}.json`;
-               link.click();
-               
-               URL.revokeObjectURL(url);
-               
-               this.addMessage('learning', 
-                   `📤 学習データをエクスポートしました (${knowledgeArray.length}件)`);
-           }
-
-           importKnowledge() {
-               const input = document.createElement('input');
-               input.type = 'file';
-               input.accept = '.json';
-               input.onchange = (e) => {
-                   const file = e.target.files[0];
-                   if (file) {
-                       const reader = new FileReader();
-                       reader.onload = (event) => {
-                           try {
-                               const importedData = JSON.parse(event.target.result);
-                               let importCount = 0;
-                               
-                               importedData.forEach(item => {
-                                   if (item.id && item.topic && item.content) {
-                                       this.knowledgeBase.set(item.id, {
-                                           ...item,
-                                           timestamp: new Date(item.timestamp)
-                                       });
-                                       importCount++;
-                                   }
-                               });
-                               
-                               this.updateKnowledgeDisplay();
-                               this.updateStats();
-                               this.addMessage('learning', 
-                                   `📥 学習データをインポートしました (${importCount}件)`);
-                           } catch (error) {
-                               this.showError('ファイルの読み込みに失敗しました');
-                           }
-                       };
-                       reader.readAsText(file);
-                   }
-               };
-               input.click();
-           }
-
-           clearKnowledge() {
-               if (confirm('学習データをすべて削除しますか？この操作は取り消せません。')) {
-                   this.knowledgeBase.clear();
-                   this.initializeKnowledgeBase();
-                   this.addMessage('learning', '🗑️ 学習データをクリアしました');
-               }
-           }
-
-           showLearningStats() {
-               const totalItems = this.knowledgeBase.size;
-               const sourceStats = {};
-               
-               this.knowledgeBase.forEach(item => {
-                   sourceStats[item.source] = (sourceStats[item.source] || 0) + 1;
-               });
-
-               let statsText = `📊 学習統計:\n総アイテム数: ${totalItems}\n\n`;
-               Object.entries(sourceStats).forEach(([source, count]) => {
-                   statsText += `${source}: ${count}件\n`;
-               });
-
-               this.addMessage('learning', statsText);
-           }
-
-           pauseDialogue() {
-               this.isPaused = !this.isPaused;
-               this.elements.pauseBtn.textContent = this.isPaused ? '▶️ 再開' : '⏸️ 一時停止';
-               
-               const statusMessage = this.isPaused ? '⏸️ 対話を一時停止しました' : '▶️ 対話を再開しました';
-               this.addMessage('system', statusMessage);
-               
-               if (!this.isPaused && this.isRunning) {
-                   // 再開時に次のメッセージを送信
-                   setTimeout(() => {
-                       if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages) {
-                           const nextProvider = this.currentSpeaker === 'openai' ? 'gemini' : 'openai';
-                           const resumePrompt = this.generateResumePrompt();
-                           this.sendMessage(nextProvider, resumePrompt);
-                       }
-                   }, 1000);
-               }
-           }
-
-           generateResumePrompt() {
-               return `対話を再開します。前回の議論を踏まえて、さらに深い洞察を提供してください。`;
-           }
-
-           stopDialogue() {
-               this.isRunning = false;
-               this.isPaused = false;
-               this.waitingForIntervention = false;
-               this.elements.startBtn.disabled = false;
-               this.elements.pauseBtn.disabled = true;
-               this.elements.stopBtn.disabled = true;
-               this.elements.pauseBtn.textContent = '⏸️ 一時停止';
-               
-               const finalStats = this.generateFinalStats();
-               this.addMessage('system', 
-                   `🛑 対話終了\n\再試行M続ける編集ジャバスクリプト                   `🛑 対話終了\n\n` +
-                   `📊 最終統計:\n` +
-                   `• 総メッセージ数: ${this.messageCount}\n` +
-                   `• ChatGPT: ${this.openaiCount}回\n` +
-                   `• Gemini: ${this.geminiCount}回\n` +
-                   `• 人間介入: ${this.humanCount}回\n` +
-                   `• 学習アイテム: ${this.knowledgeBase.size}件\n` +
-                   `• 対話時間: ${Math.floor((Date.now() - this.startTime) / 1000)}秒\n\n` +
-                   `🧠 学習された主要な洞察がナレッジベースに保存されました。`
-               );
-               
-               // 対話終了を学習データに記録
-               this.learnFromDialogue('対話終了', `対話が正常に終了しました。統計: ${finalStats}`);
-           }
-
-           generateFinalStats() {
-               return `メッセージ${this.messageCount}件、介入${this.humanCount}回、学習${this.knowledgeBase.size}件`;
-           }
-
-           async callOpenAI(prompt) {
-               const apiKey = this.elements.openaiKey.value.trim();
-               
-               const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                   method: 'POST',
-                   headers: {
-                       'Authorization': `Bearer ${apiKey}`,
-                       'Content-Type': 'application/json'
-                   },
-                   body: JSON.stringify({
-                       model: 'gpt-3.5-turbo',
-                       messages: [{ role: 'user', content: prompt }],
-                       max_tokens: 1500,
-                       temperature: 0.7,
-                       top_p: 0.9,
-                       frequency_penalty: 0.1
-                   })
-               });
-
-               if (!response.ok) {
-                   throw new Error(`OpenAI API error: ${response.status}`);
-               }
-
-               const data = await response.json();
-               return data.choices[0].message.content;
-           }
-
-           async callGemini(prompt) {
-               const apiKey = this.elements.geminiKey.value.trim();
-               
-               const endpoints = [
-                   `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-                   `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`
-               ];
-
-               for (let i = 0; i < endpoints.length; i++) {
-                   try {
-                       const response = await fetch(endpoints[i], {
-                           method: 'POST',
-                           headers: {
-                               'Content-Type': 'application/json',
-                           },
-                           body: JSON.stringify({
-                               contents: [{
-                                   parts: [{
-                                       text: prompt
-                                   }]
-                               }],
-                               generationConfig: {
-                                   maxOutputTokens: 1500,
-                                   temperature: 0.6,
-                                   topP: 0.8,
-                                   topK: 40
-                               }
-                           })
-                       });
-
-                       if (response.ok) {
-                           const data = await response.json();
-                           if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-                               return data.candidates[0].content.parts[0].text;
-                           }
-                       }
-                   } catch (error) {
-                       if (i === endpoints.length - 1) {
-                           return this.generateFallbackResponse(prompt);
-                       }
-                   }
-               }
-           }
-
-           generateFallbackResponse(prompt) {
-               return "技術的な制約により詳細な応答ができません。このテーマは重要な論点を含んでいますので、" +
-                      "接続が安定した後に改めて検討いたします。\n\n※代替応答を表示しています。";
-           }
-
-           generateSummaryPrompt() {
-               const topic = this.elements.topicInput.value.trim();
-               const chatMessages = this.elements.chatContainer.querySelectorAll('.message:not(.system-message)');
-               
-               if (chatMessages.length === 0) {
-                   this.showError('対話ログがありません。まず対話を開始してください。');
-                   return;
-               }
-
-               let conversationLog = '';
-               let humanInterventions = '';
-               let learningInsights = '';
-
-               // 対話ログの収集
-               chatMessages.forEach((message) => {
-                   const header = message.querySelector('.message-header');
-                   const content = message.querySelector('div:not(.message-header)');
-                   
-                   if (header && content) {
-                       const headerText = header.textContent.trim();
-                       const contentText = content.textContent.trim();
-                       
-                       if (contentText && contentText !== 'undefined' && contentText.length > 10) {
-                           if (headerText.includes('ChatGPT')) {
-                               conversationLog += `ChatGPT:\n${contentText}\n\n`;
-                           } else if (headerText.includes('Gemini')) {
-                               conversationLog += `Gemini:\n${contentText}\n\n`;
-                           } else if (headerText.includes('👤') || message.classList.contains('human-message')) {
-                               humanInterventions += `人間介入:\n${contentText}\n\n`;
-                           } else if (headerText.includes('🧠') || message.classList.contains('learning-message')) {
-                               learningInsights += `学習記録:\n${contentText}\n\n`;
-                           }
-                       }
-                   }
-               });
-
-               // 学習データの収集
-               let knowledgeBaseContent = '';
-               this.knowledgeBase.forEach((item, id) => {
-                   if (item.source !== 'system') {
-                       knowledgeBaseContent += `${item.topic}: ${item.content}\n`;
-                   }
-               });
-
-               const summaryPrompt = `Crossthink v5.0 Advanced Interactive Edition での対話を総合的に分析し、「${topic}」について包括的にまとめてください。
-
-【v5.0 Advanced Interactive Edition の特徴】
-- AI自律対話: ${this.messageCount}メッセージで完了
-- 人間介入: ${this.humanCount}回の戦略的介入
-- 学習機能: ${this.knowledgeBase.size}件の洞察を自動学習
-- モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}
-- 介入設定: ${this.getInterventionLabel()}
-
-【分析要求】
-- AI同士の自律対話の成果と質を評価
-- 人間介入による議論への影響と価値を分析
-- 学習システムが抽出した重要な洞察を統合
-- v5.0の革新的機能（自律対話・介入・学習）の効果を評価
-- 全体で4000-5000文字程度（詳細版）
-
-【AI自律対話ログ】
-${conversationLog}
-
-【人間介入記録】
-${humanInterventions}
-
-【自動学習された洞察】
-${knowledgeBaseContent}
-
-【学習機能による記録】
-${learningInsights}
-
-【出力形式】
-# ${topic}の総合分析（Crossthink v5.0 Advanced Interactive Edition）
-
-## 対話システム概要
-- AI自律対話設定: ${this.getTargetLabel()} × ${this.getGoalLabel()}
-- 総メッセージ数: ${this.messageCount}（ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount}）
+    <div class="container">
+        <div class="header">
+            <h1>🌟 Crossthink 統合プラットフォーム</h1>
+            <p>AI自律対話・人間介入・学習機能搭載システム</p>
+            <div class="demo-label">
+                🚀 v5.0 - Advanced Interactive Edition
+            </div>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="tab-button active" onclick="switchTab('autonomous')">
+                🤖 AI自律対話
+            </button>
+            <button class="tab-button" onclick="switchTab('intervention')">
+                👤 人間介入モード
+            </button>
+            <button class="tab-button" onclick="switchTab('learning')">
+                🧠 学習機能
+            </button>
+        </div>
+
+        <div id="autonomous-tab" class="tab-content active">
+            <div class="autonomous-section">
+                <h3>🤖 AI自律対話設定</h3>
+                <div class="autonomous-controls">
+                    <div class="control-group">
+                        <h4>🎯 対話モード</h4>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>🏠 実用的</span>
+                                <span>💼 ビジネス</span>
+                                <span>🧠 哲学的</span>
+                            </div>
+                            <input type="range" id="targetModeSlider" class="range-slider" min="0" max="100" value="33">
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>💡 案出し</span>
+                                <span>🤝 合意形成</span>
+                                <span>🔍 探索</span>
+                            </div>
+                            <input type="range" id="goalModeSlider" class="range-slider" min="0" max="100" value="50">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h4>⚙️ 自律対話設定</h4>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>短時間集中</span>
+                                <span id="autonomyLengthLabel">標準 (8メッセージ)</span>
+                                <span>深い探求</span>
+                            </div>
+                            <input type="range" id="autonomyLengthSlider" class="range-slider" min="4" max="20" value="8">
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>人間介入: なし</span>
+                                <span id="interventionFreqLabel">中程度</span>
+                                <span>頻繁</span>
+                            </div>
+                            <input type="range" id="interventionFreqSlider" class="range-slider" min="0" max="10" value="3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="intervention-tab" class="tab-content">
+            <div class="intervention-section">
+                <h3>👤 人間介入コントロール</h3>
+                <div class="human-input-area">
+                    <h4>💬 あなたの発言</h4>
+                    <textarea id="humanInput" class="human-input" 
+                                placeholder="AIの対話に介入したい内容を入力してください。質問、指摘、新しい視点の提供など、自由に発言できます。"></textarea>
+                    
+                    <div class="intervention-buttons">
+                        <button class="btn btn-warning" onclick="humanIntervention()">
+                            💬 対話に介入
+                        </button>
+                        <button class="btn btn-secondary" onclick="requestDeepening()">
+                            🔍 論点を深掘り要求
+                        </button>
+                        <button class="btn btn-primary" onclick="redirectDialogue()">
+                            🎯 対話の方向転換
+                        </button>
+                        <button class="btn btn-success" onclick="saveInsight()">
+                            💡 洞察を学習データに保存
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="quick-buttons">
+                    <button class="quick-btn" onclick="quickIntervention('具体例')">
+                        📝 「具体例を教えて」
+                    </button>
+                    <button class="quick-btn" onclick="quickIntervention('反対意見')">
+                        🔄 「反対の視点では？」
+                    </button>
+                    <button class="quick-btn" onclick="quickIntervention('実用性')">
+                        🛠️ 「実用性を重視して」
+                    </button>
+                    <button class="quick-btn" onclick="quickIntervention('簡潔に')">
+                        ✂️ 「もっと簡潔に」
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="learning-tab" class="tab-content">
+            <div class="learning-section">
+                <h3>🧠 汎用AI学習機能</h3>
+                <div class="knowledge-base" id="knowledgeBase">
+                    <div class="knowledge-item">
+                        <div class="knowledge-topic">システム初期化</div>
+                        <div class="knowledge-content">Crossthink v5.0 学習機能が有効化されました。対話から得られた洞察を自動学習します。</div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-success" onclick="exportKnowledge()">
+                        📤 学習データエクスポート
+                    </button>
+                    <button class="btn btn-primary" onclick="importKnowledge()">
+                        📥 学習データインポート
+                    </button>
+                    <button class="btn btn-warning" onclick="clearKnowledge()">
+                        🗑️ 学習データクリア
+                    </button>
+                    <button class="btn btn-secondary" onclick="showLearningStats()">
+                        📊 学習統計表示
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h2>🔧 API設定</h2>
+            <div class="config-grid">
+                <div class="api-config openai-config">
+                    <h3>OpenAI API Key:</h3>
+                    <input type="password" id="openaiKey" class="api-input" placeholder="sk-proj-...">
+                </div>
+                <div class="api-config gemini-config">
+                    <h3>Gemini API Key:</h3>
+                    <input type="password" id="geminiKey" class="api-input" placeholder="AIza...">
+                </div>
+            </div>
+        </div>
+
+        <div class="topic-section">
+            <h2>📝 対話トピック:</h2>
+            <input type="text" id="topicInput" class="topic-input" 
+                    placeholder="AI同士に対話させたいトピックを入力してください" 
+                    value="AI時代における人間の創造性とは何か？">
+            
+            <div class="controls">
+                <button id="startBtn" class="btn btn-primary">🚀 対話開始</button>
+                <button id="pauseBtn" class="btn btn-warning" disabled>⏸️ 一時停止</button>
+                <button id="stopBtn" class="btn btn-danger" disabled>⏹️ 停止</button>
+                <button id="clearBtn" class="btn btn-secondary">🗑️ クリア</button>
+                <button id="exportBtn" class="btn btn-secondary">📝 要約生成</button>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <h2>📊 対話統計</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalMessages">0</div>
+                    <div class="stat-label">総メッセージ数</div>
+                </div>
+                <div class="stat-card openai-stat">
+                    <div class="stat-number" id="openaiMessages">0</div>
+                    <div class="stat-label">ChatGPT発言</div>
+                </div>
+                <div class="stat-card gemini-stat">
+                    <div class="stat-number" id="geminiMessages">0</div>
+                    <div class="stat-label">Gemini発言</div>
+                </div>
+                <div class="stat-card human-stat">
+                    <div class="stat-number" id="humanMessages">0</div>
+                    <div class="stat-label">人間介入</div>
+                </div>
+                <div class="stat-card learning-stat">
+                    <div class="stat-number" id="learningItems">1</div>
+                    <div class="stat-label">学習アイテム</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="elapsed">0</div>
+                    <div class="stat-label">経過時間(秒)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="error-display" id="errorDisplay"></div>
+        <div class="warning-display" id="warningDisplay"></div>
+
+        <div class="monetization-info">
+            <h3>🚀 v5.0 Advanced Interactive Edition の特徴:</h3>
+            <ul>
+                <li>AI同士の自律対話システム：設定可能な対話長と介入頻度</li>
+                <li>リアルタイム人間介入：対話の流れを変える強力な介入機能</li>
+                <li>汎用学習機能：対話から得られた洞察を自動学習・蓄積</li>
+                <li>深掘り要求システム：特定の論点を深く探求</li>
+                <li>方向転換機能：対話の流れを戦略的にコントロール</li>
+                <li>学習データ管理：エクスポート・インポート機能付き</li>
+            </ul>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            </div>
+    </div>
+
+    <script>
+        class CrossthinkAdvanced {
+            constructor() {
+                this.isRunning = false;
+                this.isPaused = false;
+                this.messageCount = 0;
+                this.openaiCount = 0;
+                this.geminiCount = 0;
+                this.humanCount = 0;
+                this.startTime = null;
+                this.currentSpeaker = 'openai';
+                this.conversationHistory = [];
+                this.maxMessages = 8;
+                this.interventionPoints = [];
+                this.knowledgeBase = new Map();
+                this.waitingForIntervention = false;
+                
+                // モード設定
+                this.targetMode = 'philosophical';
+                this.goalMode = 'exploration';
+                this.interventionFrequency = 3;
+                this.currentTab = 'autonomous';
+                
+                // 学習機能
+                this.learningEnabled = true;
+                this.autoLearnKeywords = ['重要', '本質', '核心', '結論', '発見', '洞察', '革新'];
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.showWelcomeMessage();
+                this.initializeKnowledgeBase();
+                this.updateSliderLabels();
+            }
+
+            initializeElements() {
+                this.elements = {
+                    openaiKey: document.getElementById('openaiKey'),
+                    geminiKey: document.getElementById('geminiKey'),
+                    topicInput: document.getElementById('topicInput'),
+                    startBtn: document.getElementById('startBtn'),
+                    pauseBtn: document.getElementById('pauseBtn'),
+                    stopBtn: document.getElementById('stopBtn'),
+                    clearBtn: document.getElementById('clearBtn'),
+                    exportBtn: document.getElementById('exportBtn'),
+                    chatContainer: document.getElementById('chatContainer'),
+                    errorDisplay: document.getElementById('errorDisplay'),
+                    warningDisplay: document.getElementById('warningDisplay'),
+                    totalMessages: document.getElementById('totalMessages'),
+                    openaiMessages: document.getElementById('openaiMessages'),
+                    geminiMessages: document.getElementById('geminiMessages'),
+                    humanMessages: document.getElementById('humanMessages'),
+                    learningItems: document.getElementById('learningItems'),
+                    elapsed: document.getElementById('elapsed'), // ★修正点1: 不要な文字列を削除
+                    // スライダー要素
+                    targetModeSlider: document.getElementById('targetModeSlider'),
+                    goalModeSlider: document.getElementById('goalModeSlider'),
+                    autonomyLengthSlider: document.getElementById('autonomyLengthSlider'),
+                    interventionFreqSlider: document.getElementById('interventionFreqSlider'),
+                    autonomyLengthLabel: document.getElementById('autonomyLengthLabel'),
+                    interventionFreqLabel: document.getElementById('interventionFreqLabel'),
+                    
+                    // 人間介入要素
+                    humanInput: document.getElementById('humanInput'),
+                    
+                    // 学習機能要素
+                    knowledgeBase: document.getElementById('knowledgeBase')
+                };
+            }
+
+            bindEvents() {
+                this.elements.startBtn.addEventListener('click', () => this.startDialogue());
+                this.elements.pauseBtn.addEventListener('click', () => this.pauseDialogue());
+                this.elements.stopBtn.addEventListener('click', () => this.stopDialogue());
+                this.elements.clearBtn.addEventListener('click', () => this.clearChat());
+                this.elements.exportBtn.addEventListener('click', () => this.generateSummaryPrompt());
+                
+                // スライダーイベント
+                this.elements.targetModeSlider.addEventListener('input', () => this.updateTargetMode());
+                this.elements.goalModeSlider.addEventListener('input', () => this.updateGoalMode());
+                this.elements.autonomyLengthSlider.addEventListener('input', () => this.updateAutonomyLength());
+                this.elements.interventionFreqSlider.addEventListener('input', () => this.updateInterventionFreq());
+                
+                // Enterキーでの介入
+                this.elements.humanInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        this.humanIntervention();
+                    }
+                });
+            }
+
+            updateSliderLabels() {
+                // 対話長ラベル更新
+                this.elements.autonomyLengthSlider.addEventListener('input', () => {
+                    const value = this.elements.autonomyLengthSlider.value;
+                    this.elements.autonomyLengthLabel.textContent = `${value}メッセージ`;
+                    this.maxMessages = parseInt(value);
+                });
+                
+                // 介入頻度ラベル更新
+                this.elements.interventionFreqSlider.addEventListener('input', () => {
+                    const value = parseInt(this.elements.interventionFreqSlider.value);
+                    const labels = ['なし', '稀', '少', '中', '多', '頻繁', '非常に頻繁', '常時', 'リアルタイム', 'シンクロ', 'フル介入'];
+                    this.elements.interventionFreqLabel.textContent = labels[value] || '中程度';
+                    this.interventionFrequency = value;
+                });
+            }
+
+            updateTargetMode() {
+                const value = parseInt(this.elements.targetModeSlider.value);
+                if (value < 33) this.targetMode = 'practical';
+                else if (value < 66) this.targetMode = 'business';
+                else this.targetMode = 'philosophical';
+            }
+
+            updateGoalMode() {
+                const value = parseInt(this.elements.goalModeSlider.value);
+                if (value < 33) this.goalMode = 'ideation';
+                else if (value < 66) this.goalMode = 'consensus';
+                else this.goalMode = 'exploration';
+            }
+
+            updateAutonomyLength() {
+                this.maxMessages = parseInt(this.elements.autonomyLengthSlider.value);
+                // ラベルの更新は updateSliderLabels 内のイベントリスナーで行われるため、ここでは値の更新のみ
+            }
+
+            updateInterventionFreq() {
+                this.interventionFrequency = parseInt(this.elements.interventionFreqSlider.value);
+                 // ラベルの更新は updateSliderLabels 内のイベントリスナーで行われるため、ここでは値の更新のみ
+            }
+
+            initializeKnowledgeBase() {
+                this.knowledgeBase.set('system_init', {
+                    topic: 'システム初期化',
+                    content: 'Crossthink v5.0 Advanced Interactive Edition が初期化されました。',
+                    timestamp: new Date(),
+                    source: 'system'
+                });
+                this.updateKnowledgeDisplay();
+                this.updateStats(); // 初期アイテム数を反映
+            }
+
+            showWelcomeMessage() {
+                this.addMessage('system', 
+                    'Crossthink 統合プラットフォーム v5.0 Advanced Interactive Edition へようこそ！\n\n' +
+                    '🚀 v5.0 の新機能:\n' +
+                    '• 🤖 AI自律対話: AIが自主的に議論を展開\n' +
+                    '• 👤 人間介入: リアルタイムで対話に参加可能\n' +
+                    '• 🧠 学習機能: 対話から洞察を自動学習・蓄積\n' +
+                    '• 🔍 深掘り要求: 特定の論点を詳しく探求\n' +
+                    '• 🎯 方向転換: 対話の流れを戦略的にコントロール\n\n' +
+                    '💡 使い方:\n' +
+                    '1. タブを切り替えて機能を設定\n' +
+                    '2. AI自律対話でパラメータ調整\n' +
+                    '3. APIキーを設定してトピック入力\n' +
+                    '4. 対話開始後、いつでも介入可能\n\n' +
+                    '🎯 Advanced Features:\n' +
+                    '📈 リアルタイム学習システム\n' +
+                    '🎓 人間-AI協働最適化\n' +
+                    '💡 動的な洞察抽出\n' +
+                    '🔬 進化する対話品質'
+                );
+            }
+
+            async startDialogue() {
+                if (!this.validateInputs()) return;
+
+                this.isRunning = true;
+                this.isPaused = false;
+                this.startTime = Date.now();
+                this.currentSpeaker = 'openai'; // 初期スピーカー
+                this.conversationHistory = [];
+                this.interventionPoints = [];
+                
+                // 統計リセット
+                this.messageCount = 0;
+                this.openaiCount = 0;
+                this.geminiCount = 0;
+                this.humanCount = 0;
+                // this.knowledgeBase.clear(); // 対話開始時にナレッジベースをクリアするかは仕様による。ここではクリアしない。
+                // this.initializeKnowledgeBase(); // クリアする場合は再初期化
+                this.updateStats();
+
+
+                this.elements.startBtn.disabled = true;
+                this.elements.pauseBtn.disabled = false;
+                this.elements.stopBtn.disabled = false;
+                this.hideError();
+                this.hideWarning();
+
+                const topic = this.elements.topicInput.value.trim();
+                
+                this.addMessage('system', 
+                    `🚀 AI自律対話開始\n` +
+                    `📝 トピック: "${topic}"\n` +
+                    `🎪 モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}\n` +
+                    `⏱️ 最大メッセージ数: ${this.maxMessages}\n` +
+                    `👤 介入設定: ${this.getInterventionLabel()}\n` +
+                    `🧠 学習機能: 有効\n` +
+                    `🤖 AIが自律的に議論を開始します...`
+                );
+
+                // 学習データに対話開始を記録
+                this.learnFromDialogue('対話開始', `新しい対話が開始されました: ${topic}`);
+
+                this.startTimer();
+
+                // 初期プロンプト生成
+                const initialPrompt = this.generateInitialPrompt(topic);
+                await this.sendMessage('openai', initialPrompt);
+            }
+
+            generateInitialPrompt(topic) {
+                const basePrompt = this.generateModeSpecificPrompt(topic);
+                
+                const autonomyInstructions = `\n\n🤖 **自律対話指示 (v5.0)**:\n` +
+                    `• あなたはChatGPT(OpenAI)です\n` +
+                    `• Geminiと最大${this.maxMessages}メッセージで建設的な議論を行います\n` + // "最大" を追加
+                    `• ${this.getInterventionDescription()}\n` +
+                    `• 質の高い洞察を提供し、議論を深化させてください\n` +
+                    `• 人間が介入した場合は、その視点を尊重して議論に取り入れてください`;
+
+                return basePrompt + autonomyInstructions;
+            }
+
+            generateModeSpecificPrompt(topic) {
+                const modePrompts = {
+                    'practical-ideation': `「${topic}」について実用的なアイデアを提案してください。`,
+                    'practical-consensus': `「${topic}」について実用的な合意点を見つけましょう。`,
+                    'practical-exploration': `「${topic}」の実用的側面を深く探求してください。`,
+                    'business-ideation': `「${topic}」について革新的なビジネス視点を提供してください。`,
+                    'business-consensus': `「${topic}」についてビジネス的な最適解を導きましょう。`,
+                    'business-exploration': `「${topic}」のビジネス価値を深く分析してください。`,
+                    'philosophical-ideation': `「${topic}」について哲学的な新しい思考を提示してください。`,
+                    'philosophical-consensus': `「${topic}」について哲学的な深い理解を共有しましょう。`,
+                    'philosophical-exploration': `「${topic}」について根源的な探求を行いましょう。`
+                };
+                
+                const key = `${this.targetMode}-${this.goalMode}`;
+                return modePrompts[key] || `「${topic}」について深く議論しましょう。`;
+            }
+
+            getInterventionDescription() {
+                if (this.interventionFrequency === 0) return '人間の介入はありません';
+                if (this.interventionFrequency <= 2) return '稀に人間が介入する可能性があります';
+                if (this.interventionFrequency <= 5) return '時々人間が議論に参加する可能性があります';
+                if (this.interventionFrequency <= 8) return '頻繁に人間が対話に介入します';
+                return '人間がリアルタイムで対話をリードします';
+            }
+
+            validateInputs() {
+                const openaiKey = this.elements.openaiKey.value.trim();
+                const geminiKey = this.elements.geminiKey.value.trim();
+                const topic = this.elements.topicInput.value.trim();
+
+                if (!openaiKey) {
+                    this.showError('OpenAI API キーを入力してください');
+                    return false;
+                }
+
+                if (!geminiKey) {
+                    this.showError('Gemini API キーを入力してください');
+                    return false;
+                }
+
+                if (!topic) {
+                    this.showError('対話トピックを入力してください');
+                    return false;
+                }
+
+                return true;
+            }
+
+            async sendMessage(provider, prompt, isHumanIntervention = false) {
+                if (!this.isRunning || (this.isPaused && !isHumanIntervention)) return; // 人間介入時はisPausedでも送信
+
+                try {
+                    this.addMessage(provider, '思考中...', true);
+                    
+                    let response;
+                    if (provider === 'openai') {
+                        response = await this.callOpenAI(prompt);
+                        if(!isHumanIntervention) this.openaiCount++; // 思考中メッセージを除き、AI応答時のみカウント
+                    } else if (provider === 'gemini') {
+                        response = await this.callGemini(prompt);
+                        if(!isHumanIntervention) this.geminiCount++; // 思考中メッセージを除き、AI応答時のみカウント
+                    }
+
+                    this.removeLastMessage(); // "思考中..." を削除
+                    this.addMessage(provider, response);
+                    this.conversationHistory.push({ provider, message: response, timestamp: new Date() });
+                    // this.updateStats(); // addMessage内でmessageCountが増えるので、その後で呼ぶ
+
+                    // 学習機能: 重要な洞察を自動学習
+                    this.autoLearnFromMessage(response, provider);
+
+                    // 介入ポイントの判定
+                    if (this.shouldTriggerIntervention() && !isHumanIntervention && provider !== 'human') {
+                        this.triggerInterventionPrompt();
+                        return; // 人間の介入を待つ
+                    }
+
+                    // 次のAIに応答させる (人間介入でない場合のみ)
+                    if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages && !isHumanIntervention) {
+                        setTimeout(() => {
+                            const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
+                            const nextPrompt = this.generateNextPrompt(nextProvider, response);
+                            this.sendMessage(nextProvider, nextPrompt);
+                        }, 2000);
+                    } else if (this.messageCount >= this.maxMessages && !isHumanIntervention) {
+                        this.addMessage('system', '🎯 設定されたメッセージ数に到達しました。対話を終了します。');
+                        this.stopDialogue();
+                    }
+
+                } catch (error) {
+                    this.removeLastMessage(); // "思考中..." を削除
+                    this.showError(`APIエラー (${provider}): ${error.message}`);
+                    console.error('API Error:', error);
+                    // エラー発生時に対話を停止するか、継続を試みるかは仕様による
+                    // this.stopDialogue(); 
+                } finally {
+                    if (provider === 'openai' || provider === 'gemini' || provider === 'human') {
+                        this.updateStats(); // 最終的な統計を更新
+                    }
+                }
+            }
+
+            shouldTriggerIntervention() {
+                if (this.interventionFrequency === 0) return false;
+                if (this.waitingForIntervention) return false;
+                
+                // 介入頻度に基づく確率的判定
+                const interventionProbability = this.interventionFrequency / 10;
+                const shouldIntervene = Math.random() < interventionProbability;
+                
+                // または特定のメッセージ数での強制介入 (例)
+                // ここでは確率のみで判定。より複雑なロジックも可能。
+                // const forceInterventionPoints = [Math.floor(this.maxMessages / 3), Math.floor(this.maxMessages * 2 / 3)];
+                // const forceIntervention = forceInterventionPoints.includes(this.messageCount) && this.interventionFrequency >= 5;
+                
+                return shouldIntervene; // || forceIntervention;
+            }
+
+            triggerInterventionPrompt() {
+                this.waitingForIntervention = true;
+                // this.isPaused = true; // pauseDialogueを呼ぶか、ここで直接制御
+
+                const interventionDiv = document.createElement('div');
+                interventionDiv.className = 'intervention-prompt';
+                interventionDiv.innerHTML = `
+                    <h4>👤 人間介入のタイミングです</h4>
+                    <p>AIの対話に何か追加したい視点はありますか？<br>介入タブで入力するか、AIに続行させてください。</p>
+                    <button class="btn btn-warning" onclick="continueAutonomously()">
+                        🤖 AIに続行させる
+                    </button>
+                    <button class="btn btn-primary" onclick="switchToInterventionTab()">
+                        👤 介入タブへ
+                    </button>
+                `;
+                
+                this.elements.chatContainer.appendChild(interventionDiv);
+                this.elements.chatContainer.scrollTop = this.elements.chatContainer.scrollHeight;
+                this.pauseDialogue(true); // 対話を一時停止状態にする
+            }
+
+            generateNextPrompt(provider, previousMessage) {
+                const otherProvider = provider === 'openai' ? 'Gemini' : 'ChatGPT';
+                // const originalTopic = this.elements.topicInput.value.trim(); // 必要なら使用
+                
+                let basePrompt = `${otherProvider}が以下のように述べました：\n\n"${previousMessage}"\n\n`;
+                
+                const roleInstruction = this.getProviderRoleInstruction(provider);
+                const contextualInstruction = this.getContextualInstruction();
+                
+                return basePrompt + roleInstruction + contextualInstruction;
+            }
+
+            getProviderRoleInstruction(provider) {
+                const instructions = {
+                    'openai': {
+                        'practical': '🏠 **実用的視点（ChatGPT）**: 具体的で実行可能な提案を重視してください。',
+                        'business': '💼 **ビジネス視点（ChatGPT）**: 市場価値と実現可能性を明確にしてください。',
+                        'philosophical': '🧠 **哲学的視点（ChatGPT）**: 深い洞察と新しい視点を提供してください。'
+                    },
+                    'gemini': {
+                        'practical': '🔧 **分析的検証（Gemini）**: 論理的に検証し、構造化された回答をしてください。',
+                        'business': '📊 **戦略的分析（Gemini）**: データに基づいた戦略的判断をしてください。',
+                        'philosophical': '🔍 **批判的考察（Gemini）**: 概念を精査し、論理的整合性を重視してください。'
+                    }
+                };
+                return instructions[provider]?.[this.targetMode] || '建設的で洞察に富む応答をお願いします。';
+            }
+
+            getContextualInstruction() {
+                return `\n\n🎯 **対話促進指示**:\n` +
+                    `• 相手の意見を踏まえて、さらに議論を深化させる\n` +
+                    `• 新しい視点や疑問を提起する\n` +
+                    `• 具体例や実例を交えて説得力を高める\n` +
+                    `• 最大${this.maxMessages}メッセージの制限内で価値ある議論を行う`;
+            }
+
+            // 人間介入機能
+            humanIntervention() {
+                if (!this.isRunning) { // 対話が開始されていない場合は介入できない
+                    this.showWarning('まず対話を開始してください。');
+                    return;
+                }
+                const humanMessage = this.elements.humanInput.value.trim();
+                if (!humanMessage) {
+                    this.showError('介入内容を入力してください');
+                    return;
+                }
+
+                this.addMessage('human', humanMessage);
+                this.humanCount++;
+                // this.updateStats(); // addMessage内で更新されるので不要かも
+
+                // 学習データに記録
+                this.learnFromDialogue('人間介入', humanMessage);
+                
+                // 介入後のAI応答を促す
+                // 介入時は、最後に発言したAIではなく、次に発言する予定だったAIに応答させるのが自然
+                const nextSpeakerAfterIntervention = this.currentSpeaker === 'openai' ? 'gemini' : 'openai';
+                const interventionPrompt = this.generateInterventionResponse(humanMessage, nextSpeakerAfterIntervention);
+                
+                // 対話が一時停止していたら再開
+                if (this.isPaused) {
+                    this.isPaused = false;
+                    this.elements.pauseBtn.textContent = '⏸️ 一時停止';
+                     this.addMessage('system', '▶️ 人間介入により対話を再開しました');
+                }
+                
+                this.waitingForIntervention = false; // 介入待機状態を解除
+                const interventionPrompts = this.elements.chatContainer.querySelectorAll('.intervention-prompt');
+                interventionPrompts.forEach(prompt => prompt.remove());
+
+                this.sendMessage(nextSpeakerAfterIntervention, interventionPrompt, true); // isHumanIntervention = true
+                
+                this.elements.humanInput.value = '';
+            }
+
+            generateInterventionResponse(humanMessage, respondingAI) {
+                const aiName = respondingAI === 'openai' ? 'ChatGPT' : 'Gemini';
+                return `人間が以下の介入を行いました：\n\n"${humanMessage}"\n\n` +
+                    `あなたは ${aiName} です。この人間の介入を踏まえ、建設的に応答し、議論を続けてください。必要であれば、これまでの議論の方向性を修正してください。`;
+            }
+
+            requestDeepening() {
+                if (!this.isRunning || this.conversationHistory.length === 0) {
+                    this.showError('まず対話を開始し、AIの発言がある状態で使用してください');
+                    return;
+                }
+
+                const lastAIMessage = this.conversationHistory.filter(m => m.provider === 'openai' || m.provider === 'gemini').pop();
+                if (!lastAIMessage) {
+                     this.showError('深掘り対象となるAIの発言がありません。');
+                    return;
+                }
+
+                const deepeningRequestText = `ユーザが、あなたの直前の発言「${lastAIMessage.message.substring(0,100)}...」について、より深い探求を求めています。具体例、実証データ、異なる視点からの検証など、多角的に深掘りして議論を豊かにしてください。`;
+
+                this.addMessage('system', '🔍 **深掘り要求**: AIに前回の論点のより深い探求を依頼しました');
+                
+                // 最後に発言したAIに深掘りを依頼
+                this.sendMessage(lastAIMessage.provider, deepeningRequestText, true); // isHumanIntervention = true (AIの通常の流れを中断するため)
+                this.learnFromDialogue('深掘り要求', `対象: ${lastAIMessage.provider} - ${lastAIMessage.message.substring(0,50)}...`);
+            }
+
+            redirectDialogue() {
+                 if (!this.isRunning) {
+                    this.showWarning('まず対話を開始してください。');
+                    return;
+                }
+                const redirectionText = this.elements.humanInput.value.trim();
+                if (!redirectionText) {
+                    this.showError('方向転換の指示を入力してください (例: 「もっと実用的な側面に焦点を当ててください」)');
+                    return;
+                }
+
+                this.addMessage('human', `🎯 **方向転換要求**: ${redirectionText}`);
+                this.humanCount++;
+                // this.updateStats();
+
+                const nextSpeakerAfterRedirect = this.currentSpeaker === 'openai' ? 'gemini' : 'openai';
+                const redirectionPrompt = `人間が対話の方向転換を要求しています：\n\n"${redirectionText}"\n\n` +
+                    `あなたは ${nextSpeakerAfterRedirect === 'openai' ? 'ChatGPT' : 'Gemini'} です。この指示に従い、議論の流れを調整し、新しい視点から議論を継続してください。`;
+
+                if (this.isPaused) {
+                    this.isPaused = false;
+                    this.elements.pauseBtn.textContent = '⏸️ 一時停止';
+                    this.addMessage('system', '▶️ 方向転換要求により対話を再開しました');
+                }
+                this.waitingForIntervention = false;
+                const interventionPrompts = this.elements.chatContainer.querySelectorAll('.intervention-prompt');
+                interventionPrompts.forEach(prompt => prompt.remove());
+
+                this.sendMessage(nextSpeakerAfterRedirect, redirectionPrompt, true); // isHumanIntervention = true
+                this.learnFromDialogue('方向転換', redirectionText);
+                this.elements.humanInput.value = '';
+            }
+
+            saveInsight() {
+                const insightText = this.elements.humanInput.value.trim();
+                if (!insightText) {
+                    this.showError('保存する洞察を入力してください');
+                    return;
+                }
+
+                const timestamp = new Date();
+                const insightId = `insight_${timestamp.getTime()}`;
+                
+                this.knowledgeBase.set(insightId, {
+                    topic: '人間の洞察',
+                    content: insightText,
+                    timestamp: timestamp,
+                    source: 'human_insight'
+                });
+
+                this.updateKnowledgeDisplay();
+                this.updateStats();
+                
+                this.addMessage('learning', `💡 洞察を学習データに保存しました: "${insightText.substring(0,50)}..."`);
+                this.elements.humanInput.value = '';
+            }
+
+            quickIntervention(type) {
+                if (!this.isRunning) {
+                     this.showWarning('まず対話を開始してください。');
+                    return;
+                }
+                const quickMessages = {
+                    '具体例': '具体例を教えてください。実際の事例やデータがあると理解が深まります。',
+                    '反対意見': '反対の視点からはどう見えるでしょうか？批判的な見解も聞かせてください。',
+                    '実用性': '実用性を重視してください。実際に使える形での提案をお願いします。',
+                    '簡潔に': 'もっと簡潔にまとめてください。要点を絞って説明してください。'
+                };
+
+                this.elements.humanInput.value = quickMessages[type] || '';
+                this.humanIntervention();
+            }
+
+            // 学習機能
+            autoLearnFromMessage(message, provider) {
+                if (!this.learningEnabled) return;
+
+                const hasImportantKeywords = this.autoLearnKeywords.some(keyword => 
+                    message.includes(keyword));
+
+                if (hasImportantKeywords || message.length > 200) { // メッセージ長も考慮
+                    const timestamp = new Date();
+                    const learnId = `auto_${provider}_${timestamp.getTime()}`;
+                    
+                    const importantPart = this.extractImportantPart(message);
+                    
+                    this.knowledgeBase.set(learnId, {
+                        topic: `${provider}の洞察 (自動)`,
+                        content: importantPart,
+                        timestamp: timestamp,
+                        source: `auto_${provider}`,
+                        fullMessage: message // 元のメッセージも保存しておくと後で参照できる
+                    });
+
+                    this.updateKnowledgeDisplay();
+                    this.updateStats();
+                }
+            }
+
+            extractImportantPart(message) {
+                const sentences = message.split(/[。．！？\n]+/).filter(s => s.trim() !== '');
+                let importantSentences = sentences.filter(sentence => 
+                    this.autoLearnKeywords.some(keyword => sentence.includes(keyword))
+                );
+
+                if (importantSentences.length === 0 && sentences.length > 0) {
+                    // キーワードがない場合は、最初の1-2文を取るなど、別の戦略も考えられる
+                    importantSentences = sentences.slice(0, 2); 
+                }
+                
+                let result = importantSentences.slice(0, 3).join('。'); // 最大3文程度
+                if (result.length > 150) result = result.substring(0, 150) + "..."; // 長すぎる場合は切り詰める
+                else if (result.length === 0 && message.length > 0) result = message.substring(0,100) + "..."; // 何も抽出できない場合は最初の部分
+
+                return result || "重要な洞察（詳細はログ参照）";
+            }
+
+            learnFromDialogue(topic, content) {
+                const timestamp = new Date();
+                const learnId = `dialogue_${timestamp.getTime()}`;
+                
+                this.knowledgeBase.set(learnId, {
+                    topic: topic,
+                    content: content,
+                    timestamp: timestamp,
+                    source: 'dialogue_event' // ソースをより明確に
+                });
+
+                this.updateKnowledgeDisplay();
+                this.updateStats();
+            }
+
+            updateKnowledgeDisplay() {
+                const knowledgeContainer = this.elements.knowledgeBase;
+                knowledgeContainer.innerHTML = '';
+
+                const sortedItems = Array.from(this.knowledgeBase.values()) // Map.values() を使用
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                    // .slice(0, 10); // 最新10件に限定する場合はコメント解除
+
+                if (sortedItems.length === 0) {
+                     knowledgeContainer.innerHTML = '<div class="knowledge-item"><div class="knowledge-content">学習データはまだありません。</div></div>';
+                } else {
+                    sortedItems.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'knowledge-item';
+                        itemDiv.innerHTML = `
+                            <div class="knowledge-topic">${item.topic}</div>
+                            <div class="knowledge-content">${item.content.substring(0, 100)}${item.content.length > 100 ? '...' : ''}</div>
+                            <div style="font-size: 0.8em; color: #999; margin-top: 5px;">
+                                ${item.timestamp.toLocaleString()} | ${item.source}
+                            </div>
+                        `;
+                        knowledgeContainer.appendChild(itemDiv);
+                    });
+                }
+            }
+
+            exportKnowledge() {
+                if (this.knowledgeBase.size === 0) {
+                    this.showWarning("エクスポートする学習データがありません。");
+                    return;
+                }
+                const knowledgeArray = Array.from(this.knowledgeBase.values()).map(item => ({
+                    // id は Map のキーなので、エクスポート時には含めないか、別途生成する
+                    ...item,
+                    timestamp: item.timestamp.toISOString() // ISO形式で保存
+                }));
+
+                const dataStr = JSON.stringify(knowledgeArray, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `crossthink_knowledge_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link); // Firefoxでダウンロードに必要
+                link.click();
+                document.body.removeChild(link); // すぐに削除
+                
+                URL.revokeObjectURL(url);
+                
+                this.addMessage('learning', 
+                    `📤 学習データをエクスポートしました (${knowledgeArray.length}件)`);
+            }
+
+            importKnowledge() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            try {
+                                const importedData = JSON.parse(event.target.result);
+                                let importCount = 0;
+                                
+                                if (!Array.isArray(importedData)) {
+                                    this.showError('インポートファイルはJSON配列形式である必要があります。');
+                                    return;
+                                }
+
+                                importedData.forEach((item, index) => {
+                                    // 必須フィールドのチェック
+                                    if (item.topic && item.content && item.timestamp && item.source) {
+                                        // IDはインポート時に新規生成するか、ファイル内にあればそれを使う
+                                        const itemId = item.id || `imported_${new Date(item.timestamp).getTime()}_${index}`;
+                                        this.knowledgeBase.set(itemId, {
+                                            ...item,
+                                            timestamp: new Date(item.timestamp) // Dateオブジェクトに変換
+                                        });
+                                        importCount++;
+                                    } else {
+                                        console.warn(`Skipping invalid item at index ${index}:`, item);
+                                    }
+                                });
+                                
+                                this.updateKnowledgeDisplay();
+                                this.updateStats();
+                                this.addMessage('learning', 
+                                    `📥 学習データをインポートしました (${importCount}件)`);
+                            } catch (error) {
+                                this.showError('ファイルの読み込みまたは解析に失敗しました: ' + error.message);
+                                console.error("Import error:", error);
+                            }
+                        };
+                        reader.onerror = () => {
+                            this.showError('ファイルの読み込みに失敗しました。');
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                input.click();
+            }
+
+            clearKnowledge() {
+                if (confirm('学習データをすべて削除しますか？システム初期化時のデータ以外が削除されます。この操作は取り消せません。')) {
+                    const systemInitData = this.knowledgeBase.get('system_init');
+                    this.knowledgeBase.clear();
+                    if(systemInitData) this.knowledgeBase.set('system_init', systemInitData); // システム初期化データは残す
+                    
+                    this.updateKnowledgeDisplay();
+                    this.updateStats();
+                    this.addMessage('learning', '🗑️ 学習データをクリアしました (初期化データ除く)');
+                }
+            }
+
+            showLearningStats() {
+                const totalItems = this.knowledgeBase.size;
+                const sourceStats = {};
+                
+                this.knowledgeBase.forEach(item => {
+                    sourceStats[item.source] = (sourceStats[item.source] || 0) + 1;
+                });
+
+                let statsText = `📊 学習統計:\n総アイテム数: ${totalItems}\n\nソース別内訳:\n`;
+                Object.entries(sourceStats).forEach(([source, count]) => {
+                    statsText += `  • ${source}: ${count}件\n`;
+                });
+
+                this.addMessage('learning', statsText);
+            }
+
+            pauseDialogue(triggeredBySystem = false) { // システムからの呼び出しかどうかを判定
+                if (!this.isRunning) return;
+
+                this.isPaused = !this.isPaused;
+                this.elements.pauseBtn.textContent = this.isPaused ? '▶️ 再開' : '⏸️ 一時停止';
+                
+                const statusMessage = this.isPaused ? '⏸️ 対話を一時停止しました' : '▶️ 対話を再開しました';
+                if (!triggeredBySystem || !this.isPaused) { // システムが介入プロンプト表示で停止した場合は、再開時のみメッセージ
+                    this.addMessage('system', statusMessage);
+                }
+                
+                if (!this.isPaused && this.isRunning && !this.waitingForIntervention) {
+                    // 再開時に、最後に発言したAIの次のAIから継続
+                    setTimeout(() => {
+                        if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages && this.conversationHistory.length > 0) {
+                            const lastMessage = this.conversationHistory[this.conversationHistory.length -1];
+                            const nextProvider = lastMessage.provider === 'openai' ? 'gemini' : 'openai';
+                            const resumePrompt = this.generateResumePrompt(lastMessage.message);
+                            this.sendMessage(nextProvider, resumePrompt);
+                        } else if (this.conversationHistory.length === 0) { // まだ何も発言がない場合
+                             const topic = this.elements.topicInput.value.trim();
+                             const initialPrompt = this.generateInitialPrompt(topic);
+                             this.sendMessage('openai', initialPrompt); //最初のAIから
+                        }
+                    }, 1000);
+                }
+            }
+
+            generateResumePrompt(lastMessageContent) {
+                return `対話が再開されました。直前の発言は「${lastMessageContent.substring(0,100)}...」でした。この議論を踏まえて、さらに深い洞察を提供してください。`;
+            }
+
+            stopDialogue() {
+                this.isRunning = false;
+                this.isPaused = false; // 停止時は一時停止も解除
+                this.waitingForIntervention = false;
+                this.elements.startBtn.disabled = false;
+                this.elements.pauseBtn.disabled = true;
+                this.elements.stopBtn.disabled = true;
+                this.elements.pauseBtn.textContent = '⏸️ 一時停止';
+                
+                const finalStatsSummary = this.generateFinalStats();
+                this.addMessage('system', 
+                    `🛑 対話終了\n\n` + // ★修正点2: 不要な文字列と行を整理
+                    `📊 最終統計:\n` +
+                    `• 総メッセージ数: ${this.messageCount}\n` +
+                    `• ChatGPT: ${this.openaiCount}回\n` +
+                    `• Gemini: ${this.geminiCount}回\n` +
+                    `• 人間介入: ${this.humanCount}回\n` +
+                    `• 学習アイテム: ${this.knowledgeBase.size}件\n` +
+                    `• 対話時間: ${this.startTime ? Math.floor((Date.now() - this.startTime) / 1000) : 0}秒\n\n` +
+                    `🧠 学習された主要な洞察がナレッジベースに保存されました。`
+                );
+                
+                this.learnFromDialogue('対話終了', `対話が終了しました。${finalStatsSummary}`);
+            }
+
+            generateFinalStats() {
+                return `総メッセージ: ${this.messageCount}, ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount}, 人間介入: ${this.humanCount}, 学習アイテム: ${this.knowledgeBase.size}`;
+            }
+
+            async callOpenAI(prompt) {
+                const apiKey = this.elements.openaiKey.value.trim();
+                
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo', // モデルは適宜変更可能
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 1500, // 応答の最大長
+                        temperature: 0.7, // 応答の多様性 (0-1)
+                        top_p: 0.9,       // トークン選択の多様性
+                        // frequency_penalty: 0.1 // 頻出トークンの抑制 (必要に応じて)
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: "Unknown API error" }));
+                    throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+                    return data.choices[0].message.content;
+                } else {
+                    throw new Error('OpenAI APIから予期しない形式の応答がありました。');
+                }
+            }
+
+            async callGemini(prompt) {
+                const apiKey = this.elements.geminiKey.value.trim();
+                
+                // 推奨モデル順に試行 (例: Flash -> Pro)
+                const models = ['gemini-1.5-flash-latest', 'gemini-pro'];
+                let lastError = null;
+
+                for (const model of models) {
+                    try {
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                contents: [{
+                                    parts: [{
+                                        text: prompt
+                                    }]
+                                }],
+                                generationConfig: {
+                                    maxOutputTokens: 1500,
+                                    temperature: 0.6,
+                                    topP: 0.8,
+                                    // topK: 40 // 必要に応じて
+                                }
+                            })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+                                return data.candidates[0].content.parts[0].text;
+                            } else {
+                                // レスポンス形式が不正な場合もエラーとして扱う
+                                lastError = new Error(`Gemini API (${model}) から予期しない形式の応答がありました。`);
+                                continue; // 次のモデルを試行
+                            }
+                        } else {
+                             const errorData = await response.json().catch(() => ({ message: "Unknown API error" }));
+                             lastError = new Error(`Gemini API error (${model}): ${response.status} - ${errorData.error?.message || response.statusText}`);
+                             if (response.status === 429) { // Rate limit の場合はすぐにフォールバック
+                                 console.warn(`Gemini API (${model}) rate limit exceeded.`);
+                                 break;
+                             }
+                             // 他のエラーなら次のモデルを試す
+                        }
+                    } catch (error) {
+                        lastError = error; // ネットワークエラーなど
+                        console.error(`Error calling Gemini API (${model}):`, error);
+                    }
+                }
+                // すべてのモデルで失敗した場合
+                console.warn("All Gemini models failed. Using fallback response.", lastError);
+                return this.generateFallbackResponse(prompt, lastError ? lastError.message : "API呼び出しに失敗");
+            }
+
+            generateFallbackResponse(prompt, reason = "API呼び出しに失敗") {
+                return `申し訳ありませんが、技術的な問題によりAIからの応答を取得できませんでした。(理由: ${reason})\n` +
+                        "時間をおいて再度お試しいただくか、管理者にご連絡ください。\n" +
+                        "※これは代替応答です。";
+            }
+
+            generateSummaryPrompt() {
+                const topic = this.elements.topicInput.value.trim();
+                
+                if (this.conversationHistory.length === 0) {
+                    this.showError('要約対象の対話ログがありません。まず対話を開始してください。');
+                    return;
+                }
+
+                let conversationLog = '';
+                let humanInterventionsLog = ''; // 人間介入のみを抽出
+                let learningInsightsLog = '';   // 学習メッセージのみを抽出
+
+                this.conversationHistory.forEach(entry => {
+                    const formattedMessage = `${entry.provider.toUpperCase()}: ${entry.message}\n`;
+                    conversationLog += formattedMessage;
+                    if(entry.provider === 'human') {
+                        humanInterventionsLog += `${entry.message}\n\n`;
+                    }
+                });
+                
+                this.elements.chatContainer.querySelectorAll('.learning-message div:not(.message-header)').forEach(el => {
+                    learningInsightsLog += el.textContent.trim() + '\n\n';
+                });
+
+
+                let knowledgeBaseSummary = '主な学習アイテム:\n';
+                let count = 0;
+                for (const item of this.knowledgeBase.values()) {
+                    if (item.source !== 'system_init' && item.source !== 'dialogue_event' && count < 5) { // 主要なものを5件程度
+                        knowledgeBaseSummary += `  - [${item.source}] ${item.topic}: ${item.content.substring(0, 80)}...\n`;
+                        count++;
+                    }
+                }
+                if (count === 0) knowledgeBaseSummary = "学習アイテムはまだ少ないです。\n";
+
+
+                const summaryPrompt = `Crossthink v5.0 Advanced Interactive Edition で行われた以下の対話セッションを総合的に分析し、トピック「${topic}」について包括的なレポートを作成してください。
+
+【セッション概要】
+- 対話モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}
+- 総AIメッセージ数: ${this.openaiCount + this.geminiCount} (ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount})
 - 人間介入回数: ${this.humanCount}
-- 学習アイテム数: ${this.knowledgeBase.size}
+- 自動学習アイテム数 (抜粋): ${Math.min(count, 5)} / ${this.knowledgeBase.size -1} (初期化データ除く)
 
-## AI自律対話の分析
-### ChatGPTの貢献
-[ChatGPTの主要な洞察と議論スタイルを分析]
+【v5.0 Advanced Interactive Edition の特徴を考慮した分析要求】
+1.  **AI自律対話の品質評価**:
+    * ChatGPTとGeminiがそれぞれどのような貢献をしたか。
+    * AI間の議論は建設的で、トピックの探求に深みをもたらしたか。
+2.  **人間介入の効果分析**:
+    * 人間介入は議論の方向性や質にどのような影響を与えたか。
+    * AIと人間の協働は効果的だったか。
+3.  **自動学習システムの成果**:
+    * 自動学習機能によってどのような重要な洞察が抽出されたか（上記「主な学習アイテム」参照）。
+    * この学習システムは対話内容の価値を捉えられているか。
+4.  **総合的結論と提言**:
+    * この対話セッションから得られた最も重要な発見や結論は何か。
+    * Crossthink v5.0 のような統合システム（自律対話・人間介入・学習）の潜在的な価値や改善点は何か。
 
-### Geminiの貢献
-[Geminiの主要な洞察と議論スタイルを分析]
+【対話ログ全文】
+${conversationLog}
+${humanInterventionsLog ? "\n【主な人間介入内容】\n" + humanInterventionsLog : ""}
+${learningInsightsLog ? "\n【学習システムからの通知】\n" + learningInsightsLog : ""}
+${knowledgeBaseSummary}
 
-### AI間の相互作用
-[AI同士の建設的な議論の質と深化プロセスを評価]
+【レポート構成案】
+1.  はじめに (トピックとセッション概要)
+2.  AI自律対話の分析 (各AIの貢献、相互作用)
+3.  人間介入の影響とAI-人間協働の評価
+4.  学習機能による洞察抽出の評価
+5.  総合的結論と今後の展望/提言
 
-## 人間介入の影響分析
-### 介入のタイミングと内容
-[人間がいつ、どのような内容で介入したかを分析]
+レポートは詳細かつ具体的で、4000～5000字程度を目安としてください。Crossthink v5.0の各機能がどのように連携し、どのような価値を生み出したかを明確に記述してください。`;
 
-### 議論への影響
-[人間介入が議論の方向性や深度に与えた影響を評価]
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(summaryPrompt).then(() => {
+                        this.addMessage('system', 
+                            '📋 Crossthink v5.0 Advanced Interactive Edition 要約プロンプトをクリップボードにコピーしました！\n\n' +
+                            'このプロンプトを高性能なLLM (例: GPT-4, Claude 3 Opus, Gemini Advancedなど) に入力して、詳細なレポートを生成してください。\n' +
+                            `プロンプト文字数: ${summaryPrompt.length}文字`
+                        );
+                    }).catch(err => {
+                        console.error('クリップボードへのコピーに失敗:', err);
+                        this.showPromptWindow(summaryPrompt); // フォールバック
+                    });
+                } else {
+                    this.showPromptWindow(summaryPrompt); // HTTPSでない場合など
+                }
+            }
 
-### AI-人間協働の効果
-[人間とAIの協働による相乗効果を分析]
+            showPromptWindow(summaryPrompt) {
+                const summaryWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
+                if (summaryWindow) {
+                    summaryWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Crossthink v5.0 要約プロンプト</title>
+                                <style>
+                                    body { font-family: system-ui, sans-serif; margin: 0; padding: 1em; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                                    .container { background-color: white; padding: 2em; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 90%; max-width: 800px; }
+                                    h2 { margin-top: 0; color: #333; }
+                                    textarea { width: 100%; height: 60vh; margin-bottom: 1em; padding: 0.8em; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 0.9em; box-sizing: border-box; }
+                                    button { padding: 0.8em 1.5em; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 0.5em; }
+                                    .copy-btn { background-color: #4CAF50; color: white; }
+                                    .close-btn { background-color: #f44336; color: white; }
+                                    .stats { font-size: 0.9em; background-color: #e7f3fe; padding: 0.8em; border-radius: 4px; margin-bottom: 1em; border-left: 4px solid #2196F3;}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <h2>🚀 Crossthink v5.0 要約プロンプト</h2>
+                                    <div class="stats">
+                                      <strong>情報:</strong> このプロンプトを高性能LLMに貼り付けて、対話の包括的なレポートを生成してください。<br>
+                                      文字数: ${summaryPrompt.length}
+                                    </div>
+                                    <textarea id="promptArea" readonly>${summaryPrompt.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</textarea>
+                                    <button class="copy-btn" onclick="document.getElementById('promptArea').select(); document.execCommand('copy'); alert('プロンプトをコピーしました！');">📋 コピー</button>
+                                    <button class="close-btn" onclick="window.close();">❌ 閉じる</button>
+                                </div>
+                            </body>
+                        </html>
+                    `);
+                    summaryWindow.document.close(); // 重要
+                } else {
+                    this.addMessage('system', 
+                        '⚠️ ポップアップウィンドウを開けませんでした。ブラウザのポップアップブロック設定を確認してください。\n' +
+                        'プロンプトはコンソールに出力されました。'
+                    );
+                    console.log("要約プロンプト:\n", summaryPrompt);
+                }
+            }
 
-## 自動学習システムの成果
-### 抽出された重要洞察
-[学習システムが自動的に抽出した重要な洞察を整理]
+            addMessage(provider, content, isThinking = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${provider}-message`;
 
-### 学習品質の評価
-[自動学習の精度と有用性を評価]
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit'});
 
-### ナレッジベースの価値
-[蓄積された知識の体系性と活用可能性を分析]
+                let providerName, emoji, roleDesc = '';
+                switch (provider) {
+                    case 'openai':
+                        providerName = 'ChatGPT'; emoji = '🟢'; roleDesc = ` (${this.targetMode})`;
+                        this.currentSpeaker = 'openai'; // 最後に発言したAIを記録
+                        break;
+                    case 'gemini':
+                        providerName = 'Gemini'; emoji = '🔷'; roleDesc = ` (${this.targetMode})`;
+                        this.currentSpeaker = 'gemini'; // 最後に発言したAIを記録
+                        break;
+                    case 'human':
+                        providerName = 'あなた'; emoji = '👤';
+                        break;
+                    case 'learning':
+                        providerName = '学習システム'; emoji = '🧠';
+                        break;
+                    case 'system': default:
+                        providerName = 'Crossthink v5.0'; emoji = '🚀';
+                        break;
+                }
 
-## 統合的結論と推奨事項
-### 主要な発見
-[対話全体を通じて得られた最も重要な洞察]
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        ${emoji} ${providerName}${roleDesc}
+                        <span class="message-time">${timeStr}</span>
+                    </div>
+                    <div class="${isThinking ? 'thinking' : ''}">${content.replace(/\n/g, '<br>')}</div>
+                `;
 
-### v5.0システムの革新性評価
-[自律対話・人間介入・学習機能の統合効果を評価]
+                this.elements.chatContainer.appendChild(messageDiv);
+                this.elements.chatContainer.scrollTop = this.elements.chatContainer.scrollHeight;
 
-### 今後の発展可能性
-[このシステムの改善点と発展の方向性]
+                if (!isThinking && (provider === 'openai' || provider === 'gemini' || provider === 'human')) {
+                    this.messageCount++; // AIと人間の応答のみカウント
+                    // this.updateStats(); // sendMessage の finally でまとめて更新
+                }
+            }
 
-## 実装への提言
-### 短期的アクション
-[即座に実行可能な具体的施策]
+            removeLastMessage() {
+                const messages = this.elements.chatContainer.querySelectorAll('.message');
+                if (messages.length > 0) {
+                    messages[messages.length - 1].remove();
+                }
+            }
 
-### 中長期的戦略
-[持続的な価値創造のための戦略的方向性]
+            clearChat() {
+                this.elements.chatContainer.innerHTML = '';
+                this.messageCount = 0;
+                this.openaiCount = 0;
+                this.geminiCount = 0;
+                this.humanCount = 0;
+                this.conversationHistory = [];
+                this.interventionPoints = [];
+                if (this.startTime) this.startTime = null; // タイマーリセット
+                this.elements.elapsed.textContent = '0';
 
-### システム改善提案
-[v5.0の更なる進化に向けた技術的・機能的提案]
+                // ボタンの状態もリセット
+                this.elements.startBtn.disabled = false;
+                this.elements.pauseBtn.disabled = true;
+                this.elements.pauseBtn.textContent = '⏸️ 一時停止';
+                this.elements.stopBtn.disabled = true;
+                this.isPaused = false;
+                this.isRunning = false;
 
-注意：Crossthink v5.0の革新的機能（AI自律対話・リアルタイム人間介入・汎用学習機能）の統合効果を重視し、従来の静的な対話システムとの差別化ポイントを明確にしてください。`;
 
-               // クリップボードにコピー
-               if (navigator.clipboard && window.isSecureContext) {
-                   navigator.clipboard.writeText(summaryPrompt).then(() => {
-                       this.addMessage('system', 
-                           '📋 Crossthink v5.0 Advanced Interactive Edition 要約プロンプトをコピーしました！\n\n' +
-                           '🚀 v5.0 の特徴:\n' +
-                           `• ${this.messageCount}メッセージのAI自律対話\n` +
-                           `• ${this.humanCount}回の戦略的人間介入\n` +
-                           `• ${this.knowledgeBase.size}件の自動学習データ\n` +
-                           '• リアルタイム協働システム\n' +
-                           '• 汎用学習機能による洞察蓄積\n\n' +
-                           `プロンプト文字数: ${summaryPrompt.length}文字`
-                       );
-                   }).catch(() => {
-                       this.showPromptWindow(summaryPrompt);
-                   });
-               } else {
-                   this.showPromptWindow(summaryPrompt);
-               }
-           }
+                this.updateStats(); // 統計表示を0に
+                this.showWelcomeMessage();
+                this.hideError();
+                this.hideWarning();
+            }
 
-           showPromptWindow(summaryPrompt) {
-               const summaryWindow = window.open('', '_blank', 'width=900,height=700');
-               if (summaryWindow) {
-                   summaryWindow.document.write(`
-                       <html>
-                           <head>
-                               <title>Crossthink v5.0 Advanced Interactive Edition 要約プロンプト</title>
-                               <style>
-                                   body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
-                                   .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                                   h2 { color: #333; margin-bottom: 20px; }
-                                   textarea { width: 100%; height: 70vh; font-family: monospace; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-                                   .btn { padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-                                   .btn-copy { background: #4CAF50; color: white; }
-                                   .btn-close { background: #f44336; color: white; }
-                                   .stats { background: #e3f2fd; padding: 10px; margin: 10px 0; border-radius: 5px; }
-                               </style>
-                           </head>
-                           <body>
-                               <div class="container">
-                                   <h2>🚀 Crossthink v5.0 Advanced Interactive Edition 要約プロンプト</h2>
-                                   <div class="stats">
-                                       <strong>Advanced Features:</strong> AI自律対話 ${this.messageCount}メッセージ + 人間介入 ${this.humanCount}回 + 学習データ ${this.knowledgeBase.size}件
-                                   </div>
-                                   <button class="btn btn-copy" onclick="document.getElementById('prompt').select(); document.execCommand('copy'); alert('コピーしました！');">📋 コピー</button>
-                                   <button class="btn btn-close" onclick="window.close();">❌ 閉じる</button>
-                                   <textarea id="prompt" readonly>${summaryPrompt}</textarea>
-                               </div>
-                           </body>
-                       </html>
-                   `);
-               } else {
-                   this.addMessage('system', 
-                       '⚠️ ポップアップがブロックされています。\n' +
-                       'ブラウザの設定でポップアップを許可してください。'
-                   );
-               }
-           }
+            showError(message) {
+                this.elements.errorDisplay.textContent = `❌ エラー: ${message}`;
+                this.elements.errorDisplay.style.display = 'block';
+                this.elements.warningDisplay.style.display = 'none'; // エラー表示時は警告を隠す
+            }
 
-           addMessage(provider, content, isThinking = false) {
-               const messageDiv = document.createElement('div');
-               messageDiv.className = `message ${provider}-message`;
+            hideError() {
+                this.elements.errorDisplay.style.display = 'none';
+            }
 
-               const now = new Date();
-               const timeStr = now.toLocaleTimeString('ja-JP');
+            showWarning(message) {
+                this.elements.warningDisplay.textContent = `⚠️ 警告: ${message}`;
+                this.elements.warningDisplay.style.display = 'block';
+                 this.elements.errorDisplay.style.display = 'none'; // 警告表示時はエラーを隠す
+            }
 
-               let providerName, emoji, roleDesc = '';
-               switch (provider) {
-                   case 'openai':
-                       providerName = 'ChatGPT';
-                       emoji = '🟢';
-                       roleDesc = ` (${this.targetMode})`;
-                       this.currentSpeaker = 'openai';
-                       break;
-                   case 'gemini':
-                       providerName = 'Gemini';
-                       emoji = '🔷';
-                       roleDesc = ` (${this.targetMode})`;
-                       this.currentSpeaker = 'gemini';
-                       break;
-                   case 'human':
-                       providerName = 'あなた';
-                       emoji = '👤';
-                       break;
-                   case 'learning':
-                       providerName = 'Learning System';
-                       emoji = '🧠';
-                       break;
-                   case 'system':
-                       providerName = 'Crossthink v5.0';
-                       emoji = '🚀';
-                       break;
-               }
+            hideWarning() {
+                this.elements.warningDisplay.style.display = 'none';
+            }
 
-               messageDiv.innerHTML = `
-                   <div class="message-header">
-                       ${emoji} ${providerName}${roleDesc}
-                       <span class="message-time">${timeStr}</span>
-                   </div>
-                   <div class="${isThinking ? 'thinking' : ''}">${content.replace(/\n/g, '<br>')}</div>
-               `;
+            updateStats() {
+                this.elements.totalMessages.textContent = this.messageCount;
+                this.elements.openaiMessages.textContent = this.openaiCount;
+                this.elements.geminiMessages.textContent = this.geminiCount;
+                this.elements.humanMessages.textContent = this.humanCount;
+                this.elements.learningItems.textContent = this.knowledgeBase.size;
+            }
 
-               this.elements.chatContainer.appendChild(messageDiv);
-               this.elements.chatContainer.scrollTop = this.elements.chatContainer.scrollHeight;
+            startTimer() {
+                const updateTimerDisplay = () => {
+                    if (this.isRunning && !this.isPaused && this.startTime) { // 実行中で一時停止中でない場合のみ更新
+                        const elapsedSeconds = Math.floor((Date.now() - this.startTime) / 1000);
+                        this.elements.elapsed.textContent = elapsedSeconds;
+                    }
+                    if (this.isRunning) { // isRunningの間はタイマーを呼び出し続ける
+                        setTimeout(updateTimerDisplay, 1000);
+                    }
+                };
+                if (this.isRunning) {
+                    updateTimerDisplay();
+                }
+            }
 
-               if (!isThinking && provider !== 'system' && provider !== 'learning') {
-                   this.messageCount++;
-               }
-           }
+            getTargetLabel() {
+                const labels = { 'practical': '🏠 実用的', 'business': '💼 ビジネス', 'philosophical': '🧠 哲学的' };
+                return labels[this.targetMode] || this.targetMode;
+            }
 
-           removeLastMessage() {
-               const messages = this.elements.chatContainer.querySelectorAll('.message');
-               if (messages.length > 0) {
-                   messages[messages.length - 1].remove();
-               }
-           }
+            getGoalLabel() {
+                const labels = { 'ideation': '💡 案出し', 'consensus': '🤝 合意形成', 'exploration': '🔍 探索' };
+                return labels[this.goalMode] || this.goalMode;
+            }
 
-           clearChat() {
-               this.elements.chatContainer.innerHTML = '';
-               this.messageCount = 0;
-               this.openaiCount = 0;
-               this.geminiCount = 0;
-               this.humanCount = 0;
-               this.conversationHistory = [];
-               this.interventionPoints = [];
-               this.updateStats();
-               this.showWelcomeMessage();
-               this.hideError();
-               this.hideWarning();
-           }
+            getInterventionLabel() {
+                const labels = ['なし', '稀', '少', '中', '多', '頻繁', '非常に頻繁', '常時', 'リアルタイム', 'シンクロ', 'フル介入'];
+                return labels[this.interventionFrequency] || '中程度';
+            }
+        }
 
-           showError(message) {
-               this.elements.errorDisplay.textContent = `❌ エラー: ${message}`;
-               this.elements.errorDisplay.style.display = 'block';
-               this.hideWarning();
-           }
+        // タブ切り替え機能
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // event.target が button 要素であることを保証 (button 要素に onclick が設定されているため)
+            const clickedButton = Array.from(document.querySelectorAll('.tab-button')).find(btn => btn.textContent.trim().includes(
+                tabName === 'autonomous' ? 'AI自律対話' :
+                tabName === 'intervention' ? '人間介入モード' :
+                '学習機能'
+            ));
 
-           hideError() {
-               this.elements.errorDisplay.style.display = 'none';
-           }
-
-           showWarning(message) {
-               this.elements.warningDisplay.textContent = `⚠️ 警告: ${message}`;
-               this.elements.warningDisplay.style.display = 'block';
-           }
-
-           hideWarning() {
-               this.elements.warningDisplay.style.display = 'none';
-           }
-
-           updateStats() {
-               this.elements.totalMessages.textContent = this.messageCount;
-               this.elements.openaiMessages.textContent = this.openaiCount;
-               this.elements.geminiMessages.textContent = this.geminiCount;
-               this.elements.humanMessages.textContent = this.humanCount;
-               this.elements.learningItems.textContent = this.knowledgeBase.size;
-           }
-
-           startTimer() {
-               const updateTimer = () => {
-                   if (this.startTime) {
-                       const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-                       this.elements.elapsed.textContent = elapsed;
-                   }
-                   if (this.isRunning) {
-                       setTimeout(updateTimer, 1000);
-                   }
-               };
-               updateTimer();
-           }
-
-           getTargetLabel() {
-               const labels = {
-                   'practical': '🏠 実用的',
-                   'business': '💼 ビジネス',
-                   'philosophical': '🧠 哲学的'
-               };
-               return labels[this.targetMode];
-           }
-
-           getGoalLabel() {
-               const labels = {
-                   'ideation': '💡 案出し',
-                   'consensus': '🤝 合意形成',
-                   'exploration': '🔍 探索'
-               };
-               return labels[this.goalMode];
-           }
-
-           getInterventionLabel() {
-               const labels = ['なし', '稀', '少', '中', '多', '頻繁', '非常に頻繁', '常時', 'リアルタイム', 'シンクロ', 'フル介入'];
-               return labels[this.interventionFrequency] || '中程度';
-           }
-       }
-
-       // タブ切り替え機能
-       function switchTab(tabName) {
-           // すべてのタブボタンとコンテンツを非アクティブに
-           document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-           document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            if (clickedButton) {
+                 clickedButton.classList.add('active');
+            }
            
-           // 選択されたタブをアクティブに
-           event.target.classList.add('active');
-           document.getElementById(`${tabName}-tab`).classList.add('active');
-           
-           // システムに現在のタブを記録
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.currentTab = tabName;
-           }
-       }
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            if (window.crossthinkSystem) {
+                window.crossthinkSystem.currentTab = tabName;
+            }
+        }
 
-       // グローバル関数（介入プロンプト用）
-       function continueAutonomously() {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.waitingForIntervention = false;
-               window.crossthinkSystem.isPaused = false;
-               
-               // 介入プロンプトを削除
-               const interventionPrompts = document.querySelectorAll('.intervention-prompt');
-               interventionPrompts.forEach(prompt => prompt.remove());
-               
-               // 対話を継続
-               window.crossthinkSystem.addMessage('system', '🤖 AI自律対話を継続します');
-               
-               setTimeout(() => {
-                   if (window.crossthinkSystem.isRunning && !window.crossthinkSystem.isPaused) {
-                       const nextProvider = window.crossthinkSystem.currentSpeaker === 'openai' ? 'gemini' : 'openai';
-                       const continuePrompt = '前回の議論を踏まえて、さらに深い洞察を提供してください。';
-                       window.crossthinkSystem.sendMessage(nextProvider, continuePrompt);
-                   }
-               }, 1000);
-           }
-       }
+        // グローバル関数（介入プロンプト用など）
+        function continueAutonomously() {
+            if (window.crossthinkSystem) {
+                window.crossthinkSystem.waitingForIntervention = false;
+                
+                const interventionPrompts = document.querySelectorAll('.intervention-prompt');
+                interventionPrompts.forEach(prompt => prompt.remove());
+                
+                // 対話を再開（pauseDialogueが内部でisPausedを反転させるので、falseを渡して再開させる）
+                window.crossthinkSystem.pauseDialogue(true); // システムが介入プロンプトから再開したことを示す
+            }
+        }
 
-       function switchToInterventionTab() {
-           switchTab('intervention');
-           document.querySelector('[onclick="switchTab(\'intervention\')"]').click();
-           
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.addMessage('system', '👤 人間介入タブに切り替わりました。介入内容を入力してください。');
-           }
-       }
+        function switchToInterventionTab() {
+            // `event.target` を使わずにタブボタンを特定してクリックイベントを発火させるか、直接 `switchTab` を呼ぶ
+            const interventionButton = Array.from(document.querySelectorAll('.tab-button')).find(btn => btn.textContent.trim().includes('人間介入モード'));
+            if (interventionButton) {
+                 interventionButton.click(); // これで switchTab('intervention') が呼ばれる
+            } else {
+                 switchTab('intervention'); // フォールバック
+            }
+            
+            if (window.crossthinkSystem) {
+                window.crossthinkSystem.addMessage('system', '👤 人間介入タブに切り替わりました。介入内容を入力し、「対話に介入」ボタンを押してください。');
+                window.crossthinkSystem.elements.humanInput.focus();
+            }
+        }
 
-       // 人間介入関数（グローバル）
-       function humanIntervention() {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.humanIntervention();
-           }
-       }
+        // HTMLのonclick属性から呼び出されるグローバル関数群
+        function humanIntervention() { if (window.crossthinkSystem) window.crossthinkSystem.humanIntervention(); }
+        function requestDeepening() { if (window.crossthinkSystem) window.crossthinkSystem.requestDeepening(); }
+        function redirectDialogue() { if (window.crossthinkSystem) window.crossthinkSystem.redirectDialogue(); }
+        function saveInsight() { if (window.crossthinkSystem) window.crossthinkSystem.saveInsight(); }
+        function quickIntervention(type) { if (window.crossthinkSystem) window.crossthinkSystem.quickIntervention(type); }
+        function exportKnowledge() { if (window.crossthinkSystem) window.crossthinkSystem.exportKnowledge(); }
+        function importKnowledge() { if (window.crossthinkSystem) window.crossthinkSystem.importKnowledge(); }
+        function clearKnowledge() { if (window.crossthinkSystem) window.crossthinkSystem.clearKnowledge(); }
+        function showLearningStats() { if (window.crossthinkSystem) window.crossthinkSystem.showLearningStats(); }
 
-       function requestDeepening() {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.requestDeepening();
-           }
-       }
+        // システム初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                window.crossthinkSystem = new CrossthinkAdvanced();
+                console.log('Crossthink統合プラットフォーム v5.0 Advanced Interactive Edition 初期化完了');
+            } catch (error) {
+                console.error('システム初期化エラー:', error);
+                alert('システムの初期化に失敗しました。ページを再読み込みするか、開発者コンソールを確認してください。');
+            }
+        });
 
-       function redirectDialogue() {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.redirectDialogue();
-           }
-       }
+        // グローバルエラーハンドラー
+        window.addEventListener('error', (event) => {
+            console.error('未処理のグローバルエラー:', event.error, 'Message:', event.message, 'File:', event.filename, 'Line:', event.lineno);
+            if (window.crossthinkSystem && window.crossthinkSystem.showError) {
+                window.crossthinkSystem.showError(`予期せぬシステムエラーが発生しました: ${event.message}`);
+            } else {
+                // alert(`予期せぬシステムエラーが発生しました。詳細はコンソールを確認してください。\n${event.message}`);
+            }
+        });
 
-       function saveInsight() {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.saveInsight();
-           }
-       }
-
-       function quickIntervention(type) {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.quickIntervention(type);
-           }
-       }
-
-       // 学習機能関数（グローバル）
-       function exportKnowledge() {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.exportKnowledge();
-           }
-       }
-
-       function importKnowledge() {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.importKnowledge();
-           }
-       }
-
-       function clearKnowledge() {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.clearKnowledge();
-           }
-       }
-
-       function showLearningStats() {
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.showLearningStats();
-           }
-       }
-
-       // システム初期化
-       document.addEventListener('DOMContentLoaded', () => {
-           try {
-               window.crossthinkSystem = new CrossthinkAdvanced();
-               console.log('Crossthink統合プラットフォーム v5.0 Advanced Interactive Edition 初期化完了');
-           } catch (error) {
-               console.error('システム初期化エラー:', error);
-               alert('システムの初期化に失敗しました。ページを再読み込みしてください。');
-           }
-       });
-
-       // グローバルエラーハンドラー
-       window.addEventListener('error', (event) => {
-           console.error('未処理エラー:', event.error);
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.showError('システムエラーが発生しました');
-           }
-       });
-
-       window.addEventListener('unhandledrejection', (event) => {
-           console.error('未処理のPromise拒否:', event.reason);
-           if (window.crossthinkSystem) {
-               window.crossthinkSystem.showWarning('通信エラーが発生しました');
-           }
-       });
-   </script>
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('未処理のPromise拒否:', event.reason);
+            if (window.crossthinkSystem && window.crossthinkSystem.showWarning) {
+                let message = '非同期処理でエラーが発生しました。';
+                if (event.reason && event.reason.message) {
+                    message += ` ${event.reason.message}`;
+                } else if (typeof event.reason === 'string') {
+                    message += ` ${event.reason}`;
+                }
+                window.crossthinkSystem.showWarning(message);
+            } else {
+                // alert('非同期処理でエラーが発生しました。詳細はコンソールを確認してください。');
+            }
+        });
+    </script>
 </body>
 </html>
