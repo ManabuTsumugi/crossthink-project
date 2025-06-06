@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crossthink 統合プラットフォーム v5.0 - AI自律対話システム</title>
+    <title>Crossthink 統合プラットフォーム v6.0 - Enhanced Edition</title>
     <style>
         * {
             margin: 0;
@@ -160,6 +160,62 @@
             border: 3px solid #4facfe;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* エンタメモード */
+        .entertainment-section {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .entertainment-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .entertainment-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .entertainment-btn {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .entertainment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 152, 0, 0.3);
+        }
+
+        /* 合意形成設定 */
+        .consensus-section {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .consensus-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
         /* 人間介入モード */
@@ -377,6 +433,11 @@
             color: white;
         }
 
+        .btn-entertainment {
+            background: linear-gradient(135deg, #ff9800 0%, #e65100 100%);
+            color: white;
+        }
+
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
@@ -422,6 +483,8 @@
         .gemini-stat .stat-number { color: #4285f4; }
         .human-stat .stat-number { color: #ffc107; }
         .learning-stat .stat-number { color: #4caf50; }
+        .consensus-stat .stat-number { color: #4caf50; }
+        .entertainment-stat .stat-number { color: #ff9800; }
 
         .error-display, .warning-display {
             padding: 15px;
@@ -500,6 +563,12 @@
             border-left: 5px solid #4caf50;
         }
 
+        .consensus-message {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-left: 5px solid #4caf50;
+            border: 2px solid #4caf50;
+        }
+
         .thinking {
             font-style: italic;
             opacity: 0.8;
@@ -535,6 +604,17 @@
             border-left: 4px solid #2196f3;
         }
 
+        .consensus-achieved {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border: 2px solid #4caf50;
+            text-align: center;
+            font-weight: bold;
+        }
+
         .monetization-info {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -566,7 +646,7 @@
         }
 
         @media (max-width: 768px) {
-            .config-grid, .quick-buttons, .autonomous-controls {
+            .config-grid, .quick-buttons, .autonomous-controls, .entertainment-controls, .consensus-controls {
                 grid-template-columns: 1fr;
             }
             
@@ -600,15 +680,18 @@
     <div class="container">
         <div class="header">
             <h1>🌟 Crossthink 統合プラットフォーム</h1>
-            <p>AI自律対話・人間介入・学習機能搭載システム</p>
+            <p>AI自律対話・合意形成・エンタメモード搭載システム</p>
             <div class="demo-label">
-                🚀 v5.0 - Advanced Interactive Edition
+                🚀 v6.0 - Enhanced Edition
             </div>
         </div>
 
         <div class="mode-tabs">
             <button class="tab-button active" onclick="switchTab('autonomous')">
                 🤖 AI自律対話
+            </button>
+            <button class="tab-button" onclick="switchTab('entertainment')">
+                🎭 エンタメモード
             </button>
             <button class="tab-button" onclick="switchTab('intervention')">
                 👤 人間介入モード
@@ -651,7 +734,7 @@
                                 <span id="autonomyLengthLabel">標準 (8メッセージ)</span>
                                 <span>深い探求</span>
                             </div>
-                            <input type="range" id="autonomyLengthSlider" class="range-slider" min="4" max="2000" value="8">
+                            <input type="range" id="autonomyLengthSlider" class="range-slider" min="4" max="200" value="8">
                         </div>
                         
                         <div class="slider-container">
@@ -663,6 +746,95 @@
                             <input type="range" id="interventionFreqSlider" class="range-slider" min="0" max="10" value="3">
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="consensus-section">
+                <h3>🤝 合意形成設定</h3>
+                <div class="consensus-controls">
+                    <div class="control-group">
+                        <h4>🎯 合意検出レベル</h4>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>厳格</span>
+                                <span id="consensusThresholdLabel">標準</span>
+                                <span>寛容</span>
+                            </div>
+                            <input type="range" id="consensusThresholdSlider" class="range-slider" min="1" max="5" value="3">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <h4>⚙️ 自動終了設定</h4>
+                        <label style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                            <input type="checkbox" id="autoEndOnConsensus" checked>
+                            <span>合意形成時に自動終了</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                            <input type="checkbox" id="consensusNotification" checked>
+                            <span>合意検出通知を表示</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="entertainment-tab" class="tab-content">
+            <div class="entertainment-section">
+                <h3>🎭 エンタメモード設定</h3>
+                <div class="entertainment-controls">
+                    <div class="control-group">
+                        <h4>🎬 コンテンツ設定</h4>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>短編</span>
+                                <span id="contentLengthLabel">中編</span>
+                                <span>長編</span>
+                            </div>
+                            <input type="range" id="contentLengthSlider" class="range-slider" min="1" max="5" value="3">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>リアル</span>
+                                <span id="creativityLabel">バランス</span>
+                                <span>ファンタジー</span>
+                            </div>
+                            <input type="range" id="creativitySlider" class="range-slider" min="1" max="5" value="3">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <h4>🎭 ジャンル選択</h4>
+                        <select id="genreSelect" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #e9ecef;">
+                            <option value="novel">📚 小説</option>
+                            <option value="dialogue">💬 ドラマ対話</option>
+                            <option value="comedy">😄 コメディ</option>
+                            <option value="mystery">🔍 ミステリー</option>
+                            <option value="scifi">🚀 SF</option>
+                            <option value="fantasy">🧙 ファンタジー</option>
+                            <option value="romance">💕 ロマンス</option>
+                            <option value="adventure">⚔️ アドベンチャー</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="entertainment-buttons">
+                    <button class="entertainment-btn" onclick="startEntertainmentMode('collaborative_story')">
+                        📚 協力小説創作
+                    </button>
+                    <button class="entertainment-btn" onclick="startEntertainmentMode('character_dialogue')">
+                        🎭 キャラクター対話
+                    </button>
+                    <button class="entertainment-btn" onclick="startEntertainmentMode('world_building')">
+                        🌍 世界観構築
+                    </button>
+                    <button class="entertainment-btn" onclick="startEntertainmentMode('story_battle')">
+                        ⚔️ ストーリーバトル
+                    </button>
+                    <button class="entertainment-btn" onclick="startEntertainmentMode('improvisation')">
+                        🎪 即興劇場
+                    </button>
+                    <button class="entertainment-btn" onclick="startEntertainmentMode('riddle_game')">
+                        🧩 謎解きゲーム
+                    </button>
                 </div>
             </div>
         </div>
@@ -688,6 +860,9 @@
                         <button class="btn btn-success" onclick="saveInsight()">
                             💡 洞察を学習データに保存
                         </button>
+                        <button class="btn btn-entertainment" onclick="triggerConsensusCheck()">
+                            🤝 合意確認を実行
+                        </button>
                     </div>
                 </div>
                 
@@ -704,6 +879,12 @@
                     <button class="quick-btn" onclick="quickIntervention('簡潔に')">
                         ✂️ 「もっと簡潔に」
                     </button>
+                    <button class="quick-btn" onclick="quickIntervention('合意形成')">
+                        🤝 「合意点を探そう」
+                    </button>
+                    <button class="quick-btn" onclick="quickIntervention('エンタメ転換')">
+                        🎭 「面白く表現して」
+                    </button>
                 </div>
             </div>
         </div>
@@ -714,7 +895,7 @@
                 <div class="knowledge-base" id="knowledgeBase">
                     <div class="knowledge-item">
                         <div class="knowledge-topic">システム初期化</div>
-                        <div class="knowledge-content">Crossthink v5.0 学習機能が有効化されました。対話から得られた洞察を自動学習します。</div>
+                        <div class="knowledge-content">Crossthink v6.0 Enhanced Edition が初期化されました。合意形成検出とエンタメモードが追加されました。</div>
                     </div>
                 </div>
                 
@@ -761,6 +942,7 @@
                 <button id="stopBtn" class="btn btn-danger" disabled>⏹️ 停止</button>
                 <button id="clearBtn" class="btn btn-secondary">🗑️ クリア</button>
                 <button id="exportBtn" class="btn btn-secondary">📝 要約生成</button>
+                <button id="consensusBtn" class="btn btn-success">🤝 合意確認</button>
             </div>
         </div>
 
@@ -787,6 +969,14 @@
                     <div class="stat-number" id="learningItems">1</div>
                     <div class="stat-label">学習アイテム</div>
                 </div>
+                <div class="stat-card consensus-stat">
+                    <div class="stat-number" id="consensusCount">0</div>
+                    <div class="stat-label">合意形成回数</div>
+                </div>
+                <div class="stat-card entertainment-stat">
+                    <div class="stat-number" id="entertainmentSessions">0</div>
+                    <div class="stat-label">エンタメセッション</div>
+                </div>
                 <div class="stat-card">
                     <div class="stat-number" id="elapsed">0</div>
                     <div class="stat-label">経過時間(秒)</div>
@@ -798,14 +988,16 @@
         <div class="warning-display" id="warningDisplay"></div>
 
         <div class="monetization-info">
-            <h3>🚀 v5.0 Advanced Interactive Edition の特徴:</h3>
+            <h3>🚀 v6.0 Enhanced Edition の新機能:</h3>
             <ul>
-                <li>AI同士の自律対話システム：設定可能な対話長と介入頻度</li>
-                <li>リアルタイム人間介入：対話の流れを変える強力な介入機能</li>
-                <li>汎用学習機能：対話から得られた洞察を自動学習・蓄積</li>
-                <li>深掘り要求システム：特定の論点を深く探求</li>
-                <li>方向転換機能：対話の流れを戦略的にコントロール</li>
-                <li>学習データ管理：エクスポート・インポート機能付き</li>
+                <li>🤝 自動合意形成検出：AIが議論の合意点を自動検出し、適切なタイミングで対話終了</li>
+                <li>🎭 エンタメモード：小説創作、キャラクター対話、世界観構築など創作特化機能</li>
+                <li>📚 協力ストーリーテリング：AIが交互に物語を紡ぎ、人間が方向性を指導</li>
+                <li>🎪 即興劇場モード：リアルタイムでドラマチックな対話を生成</li>
+                <li>🧩 謎解きゲーム：AIが謎を出し合い、解決策を協力して探求</li>
+                <li>🌍 世界観構築：ファンタジーやSF世界の詳細設定をAIが協働で作成</li>
+                <li>⚔️ ストーリーバトル：競争的な創作で互いの想像力を高め合う</li>
+                <li>🎯 高度な合意検出アルゴリズム：多次元的な合意レベル分析</li>
             </ul>
         </div>
 
@@ -814,7 +1006,7 @@
     </div>
 
     <script>
-        class CrossthinkAdvanced {
+        class CrossthinkEnhanced {
             constructor() {
                 this.isRunning = false;
                 this.isPaused = false;
@@ -822,27 +1014,49 @@
                 this.openaiCount = 0;
                 this.geminiCount = 0;
                 this.humanCount = 0;
+                this.consensusCount = 0;
+                this.entertainmentSessions = 0;
                 this.startTime = null;
-                this.currentSpeaker = 'openai'; // 初期スピーカーをどちらかに設定
+                this.currentSpeaker = 'openai';
                 this.conversationHistory = [];
-                this.maxMessages = 8; // デフォルト
-                this.interventionPoints = []; // 必要に応じて使用
+                this.maxMessages = 8;
+                this.interventionPoints = [];
                 this.knowledgeBase = new Map();
                 this.waitingForIntervention = false;
                 
-                this.targetMode = 'philosophical'; // デフォルト
-                this.goalMode = 'exploration';     // デフォルト
-                this.interventionFrequency = 3;    // デフォルト
+                this.targetMode = 'philosophical';
+                this.goalMode = 'exploration';
+                this.interventionFrequency = 3;
                 this.currentTab = 'autonomous';
                 
+                // 新機能：合意形成
+                this.consensusThreshold = 3; // 1-5のレベル
+                this.autoEndOnConsensus = true;
+                this.consensusNotification = true;
+                this.lastConsensusCheck = 0;
+                
+                // 新機能：エンタメモード
+                this.entertainmentMode = false;
+                this.currentGenre = 'novel';
+                this.contentLength = 3; // 1-5
+                this.creativityLevel = 3; // 1-5
+                this.entertainmentType = null;
+                
                 this.learningEnabled = true;
-                this.autoLearnKeywords = ['重要', '本質', '核心', '結論', '発見', '洞察', '革新', '提案'];
+                this.autoLearnKeywords = ['重要', '本質', '核心', '結論', '発見', '洞察', '革新', '提案', '合意', '一致', '同意', '面白い', '創造的'];
+                
+                // 合意検出キーワード
+                this.consensusKeywords = [
+                    '合意', '一致', '同意', '同感', '賛成', '納得', '理解', '共通認識',
+                    'その通り', 'まさに', '確かに', '同じ意見', '結論として',
+                    '私たちは', 'お互いに', '両者とも', '共に', 'つまり'
+                ];
                 
                 this.initializeElements();
                 this.bindEvents();
                 this.showWelcomeMessage();
-                this.initializeKnowledgeBase(); // knowledgeBaseが初期化されてからupdateSliderLabels
-                this.updateSliderLabels(); // スライダーの初期値を反映
+                this.initializeKnowledgeBase();
+                this.updateSliderLabels();
             }
 
             initializeElements() {
@@ -855,6 +1069,7 @@
                     stopBtn: document.getElementById('stopBtn'),
                     clearBtn: document.getElementById('clearBtn'),
                     exportBtn: document.getElementById('exportBtn'),
+                    consensusBtn: document.getElementById('consensusBtn'),
                     chatContainer: document.getElementById('chatContainer'),
                     errorDisplay: document.getElementById('errorDisplay'),
                     warningDisplay: document.getElementById('warningDisplay'),
@@ -863,6 +1078,8 @@
                     geminiMessages: document.getElementById('geminiMessages'),
                     humanMessages: document.getElementById('humanMessages'),
                     learningItems: document.getElementById('learningItems'),
+                    consensusCount: document.getElementById('consensusCount'),
+                    entertainmentSessions: document.getElementById('entertainmentSessions'),
                     elapsed: document.getElementById('elapsed'),
                     targetModeSlider: document.getElementById('targetModeSlider'),
                     goalModeSlider: document.getElementById('goalModeSlider'),
@@ -870,6 +1087,15 @@
                     interventionFreqSlider: document.getElementById('interventionFreqSlider'),
                     autonomyLengthLabel: document.getElementById('autonomyLengthLabel'),
                     interventionFreqLabel: document.getElementById('interventionFreqLabel'),
+                    consensusThresholdSlider: document.getElementById('consensusThresholdSlider'),
+                    consensusThresholdLabel: document.getElementById('consensusThresholdLabel'),
+                    autoEndOnConsensus: document.getElementById('autoEndOnConsensus'),
+                    consensusNotification: document.getElementById('consensusNotification'),
+                    contentLengthSlider: document.getElementById('contentLengthSlider'),
+                    contentLengthLabel: document.getElementById('contentLengthLabel'),
+                    creativitySlider: document.getElementById('creativitySlider'),
+                    creativityLabel: document.getElementById('creativityLabel'),
+                    genreSelect: document.getElementById('genreSelect'),
                     humanInput: document.getElementById('humanInput'),
                     knowledgeBase: document.getElementById('knowledgeBase')
                 };
@@ -881,21 +1107,37 @@
                 this.elements.stopBtn.addEventListener('click', () => this.stopDialogue());
                 this.elements.clearBtn.addEventListener('click', () => this.clearChat());
                 this.elements.exportBtn.addEventListener('click', () => this.generateSummaryPrompt());
+                this.elements.consensusBtn.addEventListener('click', () => this.manualConsensusCheck());
                 
                 this.elements.targetModeSlider.addEventListener('input', () => this.updateTargetMode());
                 this.elements.goalModeSlider.addEventListener('input', () => this.updateGoalMode());
-                this.elements.autonomyLengthSlider.addEventListener('input', () => this.updateAutonomyLength()); // ラベル更新も含むように変更
-                this.elements.interventionFreqSlider.addEventListener('input', () => this.updateInterventionFreq()); // ラベル更新も含むように変更
+                this.elements.autonomyLengthSlider.addEventListener('input', () => this.updateAutonomyLength());
+                this.elements.interventionFreqSlider.addEventListener('input', () => this.updateInterventionFreq());
+                this.elements.consensusThresholdSlider.addEventListener('input', () => this.updateConsensusThreshold());
+                this.elements.contentLengthSlider.addEventListener('input', () => this.updateContentLength());
+                this.elements.creativitySlider.addEventListener('input', () => this.updateCreativity());
+                
+                this.elements.autoEndOnConsensus.addEventListener('change', (e) => {
+                    this.autoEndOnConsensus = e.target.checked;
+                });
+                
+                this.elements.consensusNotification.addEventListener('change', (e) => {
+                    this.consensusNotification = e.target.checked;
+                });
+                
+                this.elements.genreSelect.addEventListener('change', (e) => {
+                    this.currentGenre = e.target.value;
+                });
                 
                 this.elements.humanInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && e.ctrlKey) {
-                        e.preventDefault(); // デフォルトのEnterキー挙動（改行など）を抑制
+                        e.preventDefault();
                         this.humanIntervention();
                     }
                 });
             }
 
-            updateSliderLabels() { // 初期表示とスライダー操作時のラベル更新を一元化
+            updateSliderLabels() {
                 // 対話長
                 const autonomyValue = this.elements.autonomyLengthSlider.value;
                 this.elements.autonomyLengthLabel.textContent = `${autonomyValue}メッセージ`;
@@ -907,7 +1149,24 @@
                 this.elements.interventionFreqLabel.textContent = freqLabels[interventionVal] || '中程度';
                 this.interventionFrequency = interventionVal;
 
-                // 対話モード (ラベル表示はないが内部値を更新)
+                // 合意検出レベル
+                const consensusVal = parseInt(this.elements.consensusThresholdSlider.value);
+                const consensusLabels = ['厳格', 'やや厳格', '標準', 'やや寛容', '寛容'];
+                this.elements.consensusThresholdLabel.textContent = consensusLabels[consensusVal - 1] || '標準';
+                this.consensusThreshold = consensusVal;
+
+                // コンテンツ長
+                const contentVal = parseInt(this.elements.contentLengthSlider.value);
+                const contentLabels = ['短編', 'やや短編', '中編', 'やや長編', '長編'];
+                this.elements.contentLengthLabel.textContent = contentLabels[contentVal - 1] || '中編';
+                this.contentLength = contentVal;
+
+                // 創造性レベル
+                const creativityVal = parseInt(this.elements.creativitySlider.value);
+                const creativityLabels = ['リアル', 'やや現実的', 'バランス', 'やや幻想的', 'ファンタジー'];
+                this.elements.creativityLabel.textContent = creativityLabels[creativityVal - 1] || 'バランス';
+                this.creativityLevel = creativityVal;
+
                 this.updateTargetMode();
                 this.updateGoalMode();
             }
@@ -926,25 +1185,46 @@
                 else this.goalMode = 'exploration';
             }
 
-            updateAutonomyLength() { // スライダー操作時に呼び出される
+            updateAutonomyLength() {
                 const value = this.elements.autonomyLengthSlider.value;
                 this.elements.autonomyLengthLabel.textContent = `${value}メッセージ`;
                 this.maxMessages = parseInt(value);
             }
 
-            updateInterventionFreq() { // スライダー操作時に呼び出される
+            updateInterventionFreq() {
                 const value = parseInt(this.elements.interventionFreqSlider.value);
                 const labels = ['なし', '稀', '少', '中', '多', '頻繁', '非常に頻繁', '常時', 'リアルタイム', 'シンクロ', 'フル介入'];
                 this.elements.interventionFreqLabel.textContent = labels[value] || '中程度';
                 this.interventionFrequency = value;
             }
 
+            updateConsensusThreshold() {
+                const value = parseInt(this.elements.consensusThresholdSlider.value);
+                const labels = ['厳格', 'やや厳格', '標準', 'やや寛容', '寛容'];
+                this.elements.consensusThresholdLabel.textContent = labels[value - 1] || '標準';
+                this.consensusThreshold = value;
+            }
+
+            updateContentLength() {
+                const value = parseInt(this.elements.contentLengthSlider.value);
+                const labels = ['短編', 'やや短編', '中編', 'やや長編', '長編'];
+                this.elements.contentLengthLabel.textContent = labels[value - 1] || '中編';
+                this.contentLength = value;
+            }
+
+            updateCreativity() {
+                const value = parseInt(this.elements.creativitySlider.value);
+                const labels = ['リアル', 'やや現実的', 'バランス', 'やや幻想的', 'ファンタジー'];
+                this.elements.creativityLabel.textContent = labels[value - 1] || 'バランス';
+                this.creativityLevel = value;
+            }
+
             initializeKnowledgeBase() {
                 this.knowledgeBase.set('system_init', {
                     topic: 'システム初期化',
-                    content: 'Crossthink v5.0 Advanced Interactive Edition が初期化されました。',
+                    content: 'Crossthink v6.0 Enhanced Edition が初期化されました。合意形成検出とエンタメモードが追加されました。',
                     timestamp: new Date(),
-                    source: 'system_init' // より明確なソース名
+                    source: 'system_init'
                 });
                 this.updateKnowledgeDisplay();
                 this.updateStats();
@@ -952,23 +1232,23 @@
 
             showWelcomeMessage() {
                 this.addMessage('system', 
-                    'Crossthink 統合プラットフォーム v5.0 Advanced Interactive Edition へようこそ！\n\n' +
-                    '🚀 v5.0 の新機能:\n' +
-                    '• 🤖 AI自律対話: AIが自主的に議論を展開\n' +
-                    '• 👤 人間介入: リアルタイムで対話に参加可能\n' +
-                    '• 🧠 学習機能: 対話から洞察を自動学習・蓄積\n' +
-                    '• 🔍 深掘り要求: 特定の論点を詳しく探求\n' +
-                    '• 🎯 方向転換: 対話の流れを戦略的にコントロール\n\n' +
+                    'Crossthink 統合プラットフォーム v6.0 Enhanced Edition へようこそ！\n\n' +
+                    '🚀 v6.0 の新機能:\n' +
+                    '• 🤝 自動合意形成検出: AIが議論の合意点を検出し適切なタイミングで終了\n' +
+                    '• 🎭 エンタメモード: 小説創作、キャラクター対話、世界観構築\n' +
+                    '• 📚 協力ストーリーテリング: AIが交互に物語を紡ぐ\n' +
+                    '• 🎪 即興劇場: リアルタイムドラマチック対話\n' +
+                    '• 🧩 謎解きゲーム: AI同士の謎解き協力\n' +
+                    '• 🌍 世界観構築: ファンタジー/SF世界設定作成\n\n' +
                     '💡 使い方:\n' +
-                    '1. タブを切り替えて機能を設定\n' +
-                    '2. AI自律対話でパラメータ調整 (APIキーもここで設定)\n' +
-                    '3. APIキーと対話トピックを入力\n' +
-                    '4. 「対話開始」ボタンをクリック\n' +
-                    '5. 対話中、人間介入タブからいつでも介入可能\n\n' +
-                    '🎯 Advanced Features:\n' +
-                    '📈 リアルタイム学習システム\n' +
-                    '🎓 人間-AI協働最適化\n' +
-                    '💡 動的な洞察抽出\n' +
+                    '1. 🤖 AI自律対話: 通常の議論・探求モード\n' +
+                    '2. 🎭 エンタメモード: 創作・娯楽特化モード\n' +
+                    '3. 👤 人間介入: リアルタイム対話参加\n' +
+                    '4. 🧠 学習機能: 洞察の蓄積・管理\n\n' +
+                    '🎯 Enhanced Features:\n' +
+                    '🤖 高度な合意検出アルゴリズム\n' +
+                    '🎨 多様なエンタメジャンル対応\n' +
+                    '🎪 動的な創作支援システム\n' +
                     '🔬 進化する対話品質'
                 );
             }
@@ -979,14 +1259,15 @@
                 this.isRunning = true;
                 this.isPaused = false;
                 this.startTime = Date.now();
-                this.currentSpeaker = 'openai'; 
+                this.currentSpeaker = 'openai';
                 this.conversationHistory = [];
                 
                 this.messageCount = 0;
                 this.openaiCount = 0;
                 this.geminiCount = 0;
                 this.humanCount = 0;
-                this.updateStats(); // 統計をリセット表示
+                this.lastConsensusCheck = 0;
+                this.updateStats();
 
                 this.elements.startBtn.disabled = true;
                 this.elements.pauseBtn.disabled = false;
@@ -996,37 +1277,178 @@
 
                 const topic = this.elements.topicInput.value.trim();
                 
+                let modeDescription = '';
+                if (this.entertainmentMode) {
+                    this.entertainmentSessions++;
+                    modeDescription = `🎭 エンタメモード: ${this.getGenreLabel()}\n` +
+                                     `📏 コンテンツ長: ${this.getContentLengthLabel()}\n` +
+                                     `🎨 創造性: ${this.getCreativityLabel()}\n` +
+                                     `🎪 タイプ: ${this.getEntertainmentTypeLabel()}`;
+                } else {
+                    modeDescription = `🎪 モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}\n` +
+                                     `🤝 合意検出: ${this.getConsensusThresholdLabel()}\n` +
+                                     `🔄 自動終了: ${this.autoEndOnConsensus ? '有効' : '無効'}`;
+                }
+                
                 this.addMessage('system', 
-                    `🚀 AI自律対話開始\n` +
+                    `🚀 ${this.entertainmentMode ? 'エンタメモード' : 'AI自律対話'}開始\n` +
                     `📝 トピック: "${topic}"\n` +
-                    `🎪 モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}\n` +
+                    modeDescription + '\n' +
                     `⏱️ 最大メッセージ数: ${this.maxMessages}\n` +
                     `👤 介入設定: ${this.getInterventionLabel()}\n` +
-                    `🧠 学習機能: ${this.learningEnabled ? '有効' : '無効'}\n` + // 学習機能の状態表示
-                    `🤖 AIが自律的に議論を開始します...`
+                    `🧠 学習機能: ${this.learningEnabled ? '有効' : '無効'}\n` +
+                    `🤖 AIが${this.entertainmentMode ? '創作活動' : '議論'}を開始します...`
                 );
 
-                this.learnFromDialogue('対話開始', `新しい対話が開始されました: ${topic}`);
+                this.learnFromDialogue('対話開始', `新しい${this.entertainmentMode ? 'エンタメセッション' : '対話'}が開始されました: ${topic}`);
                 this.startTimer();
 
-                const initialPrompt = this.generateInitialPrompt(topic);
-                await this.sendMessage('openai', initialPrompt, false); // 初期送信は人間介入ではない
+                const initialPrompt = this.entertainmentMode ? 
+                    this.generateEntertainmentPrompt(topic) : 
+                    this.generateInitialPrompt(topic);
+                await this.sendMessage('openai', initialPrompt, false);
+            }
+
+            generateEntertainmentPrompt(topic) {
+                const genreInstructions = this.getGenreInstructions();
+                const lengthGuidance = this.getLengthGuidance();
+                const creativityGuidance = this.getCreativityGuidance();
+                
+                const basePrompt = `🎭 **エンタメモード開始 (Crossthink v6.0)**\n` +
+                    `あなたはChatGPT（OpenAI）として、Gemini（Google）と協力して${genreInstructions.name}を創作します。\n\n` +
+                    `📝 **創作テーマ**: "${topic}"\n` +
+                    `🎨 **ジャンル**: ${genreInstructions.name}\n` +
+                    `📏 **長さ**: ${lengthGuidance}\n` +
+                    `🌟 **創造性レベル**: ${creativityGuidance}\n` +
+                    `🎪 **創作タイプ**: ${this.getEntertainmentTypeInstructions()}\n\n` +
+                    `${genreInstructions.description}\n\n` +
+                    `**創作ルール**:\n` +
+                    `• 相手の創作を尊重し、建設的に発展させる\n` +
+                    `• ${lengthGuidance}に適した分量で応答\n` +
+                    `• ${creativityGuidance}レベルの創造性を発揮\n` +
+                    `• 読者/視聴者を楽しませることを最優先\n` +
+                    `• 人間が介入した場合は指示に従って調整\n\n` +
+                    `では、最初の部分を創作してください！`;
+                
+                return basePrompt;
+            }
+
+            getGenreInstructions() {
+                const genres = {
+                    'novel': {
+                        name: '小説',
+                        description: '魅力的なキャラクター、引き込まれるプロット、美しい文体で物語を紡いでください。'
+                    },
+                    'dialogue': {
+                        name: 'ドラマ対話',
+                        description: 'キャラクター同士の生き生きとした対話で物語を進行させてください。'
+                    },
+                    'comedy': {
+                        name: 'コメディ',
+                        description: 'ユーモアあふれる展開で読者を笑わせてください。'
+                    },
+                    'mystery': {
+                        name: 'ミステリー',
+                        description: '謎と手がかりを巧妙に配置し、読者を推理に誘ってください。'
+                    },
+                    'scifi': {
+                        name: 'SF',
+                        description: '科学技術と未来社会を背景に想像力豊かな世界を描いてください。'
+                    },
+                    'fantasy': {
+                        name: 'ファンタジー',
+                        description: '魔法と幻想の世界で壮大な冒険を描いてください。'
+                    },
+                    'romance': {
+                        name: 'ロマンス',
+                        description: '心温まる恋愛関係と感情の機微を丁寧に描いてください。'
+                    },
+                    'adventure': {
+                        name: 'アドベンチャー',
+                        description: 'スリリングな冒険と挑戦に満ちた物語を展開してください。'
+                    }
+                };
+                return genres[this.currentGenre] || genres['novel'];
+            }
+
+            getLengthGuidance() {
+                const lengths = ['短い段落', 'やや短めの文章', '中程度の文章', 'やや長めの文章', '長い描写'];
+                return lengths[this.contentLength - 1] || '中程度の文章';
+            }
+
+            getCreativityGuidance() {
+                const creativity = ['現実的で地に足ついた', 'やや現実寄りの', 'バランスの取れた', 'やや幻想的な', '非常に創造的で幻想的な'];
+                return creativity[this.creativityLevel - 1] || 'バランスの取れた';
+            }
+
+            getEntertainmentTypeInstructions() {
+                const types = {
+                    'collaborative_story': '協力して一つの物語を完成させる',
+                    'character_dialogue': 'キャラクター同士の対話を中心とした展開',
+                    'world_building': '詳細な世界観の構築と探索',
+                    'story_battle': '競争的に各自の創作アイデアを提示',
+                    'improvisation': '即興的で予測不可能な展開',
+                    'riddle_game': '謎解き要素を含む対話'
+                };
+                return types[this.entertainmentType] || '自由な創作対話';
+            }
+
+            startEntertainmentMode(type) {
+                this.entertainmentMode = true;
+                this.entertainmentType = type;
+                
+                const typeLabels = {
+                    'collaborative_story': '📚 協力小説創作',
+                    'character_dialogue': '🎭 キャラクター対話',
+                    'world_building': '🌍 世界観構築',
+                    'story_battle': '⚔️ ストーリーバトル',
+                    'improvisation': '🎪 即興劇場',
+                    'riddle_game': '🧩 謎解きゲーム'
+                };
+                
+                this.addMessage('system', 
+                    `🎭 エンタメモード設定完了\n` +
+                    `📝 タイプ: ${typeLabels[type]}\n` +
+                    `🎨 ジャンル: ${this.getGenreLabel()}\n` +
+                    `📏 長さ: ${this.getContentLengthLabel()}\n` +
+                    `🌟 創造性: ${this.getCreativityLabel()}\n\n` +
+                    `トピックを入力して「対話開始」ボタンを押してください。\n` +
+                    `例: "宇宙船で未知の惑星を探索する物語", "魔法学校の日常", "未来都市の探偵事件"`
+                );
+                
+                // エンタメモード用のサンプルトピックを設定
+                const sampleTopics = {
+                    'collaborative_story': '時間旅行者が過去で出会った謎の人物',
+                    'character_dialogue': '異世界から来た王女と現代の高校生の出会い',
+                    'world_building': '魔法と科学技術が共存する未来都市',
+                    'story_battle': '最後の図書館を守る司書たち',
+                    'improvisation': '雨の日にカフェで始まった不思議な出来事',
+                    'riddle_game': '古い屋敷に隠された謎の宝物'
+                };
+                
+                if (sampleTopics[type]) {
+                    this.elements.topicInput.value = sampleTopics[type];
+                }
+                
+                switchTab('autonomous'); // 設定後は対話開始タブに移動
             }
 
             generateInitialPrompt(topic) {
                 const basePrompt = this.generateModeSpecificPrompt(topic);
-                const autonomyInstructions = `\n\n🤖 **自律対話指示 (Crossthink v5.0)**:\n` +
+                const autonomyInstructions = `\n\n🤖 **自律対話指示 (Crossthink v6.0)**:\n` +
                     `• あなたはChatGPT (OpenAIの大規模言語モデル) です。\n` +
                     `• Gemini (Googleの大規模言語モデル) と協力し、与えられたトピック「${topic}」について、最大${this.maxMessages}回のメッセージ交換を通じて建設的な議論を行います。\n` +
                     `• 対話モードは「${this.getTargetLabel()}」および「${this.getGoalLabel()}」です。これに応じた視点と深さで応答してください。\n` +
+                    `• 🤝 合意形成が重要: 議論の過程で相手との合意点を見つけ、共通理解を深めることを意識してください。\n` +
                     `• ${this.getInterventionDescription()}\n` +
                     `• 相手の意見を尊重し、論点を深め、質の高い洞察を生み出すことを目指してください。\n` +
+                    `• 合意に達したと感じた場合は、「合意」「一致」「同意」などの言葉を使って明確に表現してください。\n` +
                     `• 人間が介入した場合は、その内容を真摯に受け止め、議論に反映させてください。\n` +
                     `• 最初の発言者として、このトピックに関するあなたの見解を述べてください。`;
                 return basePrompt + autonomyInstructions;
             }
 
-            generateModeSpecificPrompt(topic) { // これは初期プロンプトの一部として使われる
+            generateModeSpecificPrompt(topic) {
                 const modePrompts = {
                     'practical-ideation': `「${topic}」について、実用的で斬新なアイデアをいくつか提案し、その実現可能性について議論を始めてください。`,
                     'practical-consensus': `「${topic}」に関する複数の実用的アプローチを比較検討し、最も効果的な合意点を見出すための議論を開始してください。`,
@@ -1071,25 +1493,23 @@
                     let callSuccessful = false;
                     if (provider === 'openai') {
                         response = await this.callOpenAI(prompt);
-                        if (response) { // callOpenAIが成功した場合のみカウント
+                        if (response) {
                             this.openaiCount++;
                             callSuccessful = true;
                         }
                     } else if (provider === 'gemini') {
                         response = await this.callGemini(prompt);
-                        if (response) { // callGeminiが成功した場合のみカウント
+                        if (response) {
                             this.geminiCount++;
                             callSuccessful = true;
                         }
                     }
 
-                    this.removeLastMessage(); // "思考中..." を削除
+                    this.removeLastMessage();
 
                     if (!callSuccessful && (provider === 'openai' || provider === 'gemini')) {
-                        // API呼び出しに失敗した場合 (フォールバック応答などが response に入っているはず)
-                        // response は generateFallbackResponse からの文字列
-                        this.addMessage(provider, response || "API呼び出しに失敗しました。"); // responseがnullやundefinedの場合のフォールバック
-                        this.stopDialogue(); // エラー時は対話を停止
+                        this.addMessage(provider, response || "API呼び出しに失敗しました。");
+                        this.stopDialogue();
                         return;
                     }
                     
@@ -1098,19 +1518,32 @@
 
                     this.autoLearnFromMessage(response, provider);
 
-                    // 介入要求のトリガー判定 (AIの応答後のみ)
+                    // 合意形成チェック（エンタメモードでは無効）
+                    if (!this.entertainmentMode && (provider === 'openai' || provider === 'gemini')) {
+                        const consensusResult = this.checkForConsensus(response);
+                        if (consensusResult.hasConsensus) {
+                            this.handleConsensusDetected(consensusResult);
+                            if (this.autoEndOnConsensus) {
+                                return; // 合意検出で終了
+                            }
+                        }
+                    }
+
+                    // 介入要求のトリガー判定
                     if ((provider === 'openai' || provider === 'gemini') && this.shouldTriggerIntervention() && !isHumanInterventionFollowUp) {
-                        this.triggerInterventionPrompt(); // 人間の介入を待つ
+                        this.triggerInterventionPrompt();
                         return; 
                     }
                     
-                    // 対話の継続判定 (AIの応答後のみ)
+                    // 対話の継続判定
                     if ((provider === 'openai' || provider === 'gemini') && this.isRunning && !this.isPaused && this.messageCount < this.maxMessages) {
                         setTimeout(() => {
-                            if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages) { // タイムアウト後も状態を再確認
+                            if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages) {
                                 const nextProvider = provider === 'openai' ? 'gemini' : 'openai';
-                                const nextPrompt = this.generateNextPrompt(nextProvider, response, this.conversationHistory);
-                                this.sendMessage(nextProvider, nextPrompt, false); // 通常のAI応答
+                                const nextPrompt = this.entertainmentMode ? 
+                                    this.generateEntertainmentContinuation(nextProvider, response, this.conversationHistory) :
+                                    this.generateNextPrompt(nextProvider, response, this.conversationHistory);
+                                this.sendMessage(nextProvider, nextPrompt, false);
                             }
                         }, 2000);
                     } else if (this.messageCount >= this.maxMessages && (provider === 'openai' || provider === 'gemini')) {
@@ -1118,15 +1551,153 @@
                         this.stopDialogue();
                     }
 
-                } catch (error) { // このcatchは主にsendMessage内の予期せぬエラー用
+                } catch (error) {
                     this.removeLastMessage(); 
                     this.showError(`メッセージ送信処理エラー: ${error.message}`);
                     console.error('SendMessage Error:', error);
                     this.stopDialogue();
                 } finally {
-                    // messageCountはaddMessage内でインクリメントされるため、openaiCount/geminiCount/humanCountのみここで更新
                     this.updateStats(); 
                 }
+            }
+
+            checkForConsensus(message) {
+                const messageLower = message.toLowerCase();
+                let consensusScore = 0;
+                let detectedKeywords = [];
+
+                // キーワードベースの検出
+                this.consensusKeywords.forEach(keyword => {
+                    if (messageLower.includes(keyword.toLowerCase())) {
+                        consensusScore++;
+                        detectedKeywords.push(keyword);
+                    }
+                });
+
+                // 文脈的な合意表現の検出
+                const contextualPatterns = [
+                    /(?:私たち|我々).*(?:合意|一致|同意)/i,
+                    /(?:両者|お互い).*(?:理解|認識|納得)/i,
+                    /(?:結論として|まとめると|つまり).*(?:同じ|共通)/i,
+                    /(?:その通り|まさに|確かに).*(?:重要|本質|核心)/i
+                ];
+
+                contextualPatterns.forEach(pattern => {
+                    if (pattern.test(message)) {
+                        consensusScore += 2; // 文脈的パターンは高得点
+                    }
+                });
+
+                // 合意レベルの判定
+                const threshold = 6 - this.consensusThreshold; // より寛容な設定ほど低い閾値
+                const hasConsensus = consensusScore >= threshold;
+
+                return {
+                    hasConsensus,
+                    score: consensusScore,
+                    threshold,
+                    keywords: detectedKeywords,
+                    level: this.getConsensusLevel(consensusScore)
+                };
+            }
+
+            getConsensusLevel(score) {
+                if (score >= 5) return '強い合意';
+                if (score >= 3) return '中程度の合意';
+                if (score >= 1) return '部分的合意';
+                return '合意なし';
+            }
+
+            handleConsensusDetected(consensusResult) {
+                this.consensusCount++;
+                
+                if (this.consensusNotification) {
+                    this.addMessage('consensus', 
+                        `🤝 **合意形成を検出しました！**\n\n` +
+                        `📊 合意レベル: ${consensusResult.level}\n` +
+                        `🎯 スコア: ${consensusResult.score}/${consensusResult.threshold}\n` +
+                        `🔍 検出キーワード: ${consensusResult.keywords.join(', ')}\n\n` +
+                        `${this.autoEndOnConsensus ? 
+                            '✅ 自動終了設定により、対話を終了します。' : 
+                            '💬 対話は継続されます。さらなる探求をお楽しみください。'}`
+                    );
+                }
+
+                this.learnFromDialogue('合意形成検出', 
+                    `${consensusResult.level}が検出されました。スコア: ${consensusResult.score}, キーワード: ${consensusResult.keywords.join(', ')}`
+                );
+
+                if (this.autoEndOnConsensus) {
+                    setTimeout(() => {
+                        this.addMessage('system', 
+                            `🎊 合意形成により対話が完了しました！\n\n` +
+                            `📈 最終統計:\n` +
+                            `• 総メッセージ数: ${this.messageCount}\n` +
+                            `• 合意検出回数: ${this.consensusCount}\n` +
+                            `• 対話時間: ${this.startTime ? Math.floor((Date.now() - this.startTime) / 1000) : 0}秒\n\n` +
+                            `🎯 建設的な議論をありがとうございました！`
+                        );
+                        this.stopDialogue();
+                    }, 1000);
+                }
+            }
+
+            manualConsensusCheck() {
+                if (this.conversationHistory.length < 2) {
+                    this.showWarning('合意確認には少なくとも2つのAI応答が必要です。');
+                    return;
+                }
+
+                const recentMessages = this.conversationHistory.slice(-3);
+                let totalScore = 0;
+                let allResults = [];
+
+                recentMessages.forEach(entry => {
+                    if (entry.provider === 'openai' || entry.provider === 'gemini') {
+                        const result = this.checkForConsensus(entry.message);
+                        totalScore += result.score;
+                        allResults.push(result);
+                    }
+                });
+
+                const averageScore = totalScore / allResults.length;
+                const hasOverallConsensus = averageScore >= (6 - this.consensusThreshold);
+
+                this.addMessage('consensus',
+                    `🔍 **手動合意確認結果**\n\n` +
+                    `📊 平均合意スコア: ${averageScore.toFixed(1)}\n` +
+                    `🎯 合意判定: ${hasOverallConsensus ? '✅ 合意あり' : '❌ 合意なし'}\n` +
+                    `📝 直近のメッセージ分析:\n` +
+                    allResults.map((r, i) => `  ${i + 1}. ${r.level} (スコア: ${r.score})`).join('\n') +
+                    `\n\n${hasOverallConsensus ? '🎊 議論は良い方向に進んでいます！' : '💬 さらなる議論が必要かもしれません。'}`
+                );
+
+                if (hasOverallConsensus) {
+                    this.consensusCount++;
+                    this.updateStats();
+                }
+            }
+
+            generateEntertainmentContinuation(currentRespondingProvider, previousContent, conversationHistory) {
+                const selfName = currentRespondingProvider === 'openai' ? 'ChatGPT' : 'Gemini';
+                const otherName = currentRespondingProvider === 'openai' ? 'Gemini' : 'ChatGPT';
+
+                let storyContext = "\n現在の物語の流れ:\n";
+                const recentHistory = conversationHistory.slice(-3);
+                recentHistory.forEach(entry => {
+                    storyContext += `- ${entry.provider === 'openai' ? 'ChatGPT' : entry.provider === 'gemini' ? 'Gemini' : '人間'}: ${entry.message.substring(0, 100)}...\n`;
+                });
+
+                const prompt = 
+                    `あなたは ${selfName} です。\n` +
+                    `現在、${otherName}と協力して${this.getGenreLabel()}を創作中です。\n` +
+                    `${otherName}が直前に書いた内容：\n「${previousContent}」\n` +
+                    `${storyContext}\n` +
+                    `この続きを${this.getLengthGuidance()}で、${this.getCreativityGuidance()}スタイルで書いてください。\n` +
+                    `${this.getEntertainmentTypeInstructions()}の方針に従って、物語を魅力的に発展させてください。\n` +
+                    `読者を引き込む展開を心がけ、相手の創作を活かしつつ新しい要素を加えてください。`;
+
+                return prompt;
             }
             
             generateNextPrompt(currentRespondingProvider, previousMessageContent, conversationHistory) {
@@ -1134,7 +1705,7 @@
                 const selfName = currentRespondingProvider === 'openai' ? 'ChatGPT' : 'Gemini';
             
                 let historySummary = "\nこれまでの対話の要点:\n";
-                const relevantHistory = conversationHistory.slice(-4); // 直近数件の履歴をコンテキストに含める
+                const relevantHistory = conversationHistory.slice(-4);
                 relevantHistory.forEach(entry => {
                     historySummary += `- ${entry.provider === 'openai' ? 'ChatGPT' : entry.provider === 'gemini' ? 'Gemini' : '人間'}: ${entry.message.substring(0, 100)}...\n`;
                 });
@@ -1144,6 +1715,7 @@
                     `直前に ${otherProviderName} (または人間) が次のように述べました:\n「${previousMessageContent}」\n\n` +
                     `${conversationHistory.length > 1 ? historySummary : ''}\n` +
                     `これまでの議論を踏まえ、あなたの役割（${this.getTargetLabel()}、${this.getGoalLabel()}）に従って、建設的な応答をしてください。\n` +
+                    `🤝 **重要**: 相手との合意点を見つけることを意識し、共通理解を深めてください。合意に達したと感じた場合は明確に表現してください。\n` +
                     `相手の意見の良い点や改善点を指摘し、議論を深める新しい視点や問いを投げかけてください。\n` +
                     `対話は最大${this.maxMessages}回のメッセージ交換で結論を出すことを目指しています。(現在 ${this.messageCount + 1} 回目)\n` +
                     `あなたの応答を記述してください。`;
@@ -1151,15 +1723,12 @@
                 return prompt;
             }
 
-
             shouldTriggerIntervention() {
                 if (this.interventionFrequency === 0 || this.waitingForIntervention) return false;
-                // 介入頻度に基づいて、例えば (現在のメッセージ数 / (maxMessages / 介入頻度)) が整数に近い時など
-                // ここでは簡易的に、(maxMessages / (interventionFrequency + 1)) の倍数メッセージ後ごとに介入を検討
                 if (this.interventionFrequency > 0 && this.maxMessages / (this.interventionFrequency +1) > 0) {
                      const interval = Math.max(1, Math.floor(this.maxMessages / (this.interventionFrequency + 1)));
-                     if (this.messageCount > 0 && this.messageCount % interval === 0 && this.messageCount < this.maxMessages -1) { // 最後のメッセージ前まで
-                         return Math.random() < 0.7; // 70%の確率でトリガー (調整可能)
+                     if (this.messageCount > 0 && this.messageCount % interval === 0 && this.messageCount < this.maxMessages -1) {
+                         return Math.random() < 0.7;
                      }
                 }
                 return false;
@@ -1167,7 +1736,7 @@
 
             triggerInterventionPrompt() {
                 this.waitingForIntervention = true;
-                this.pauseDialogue(true); // システムが対話を一時停止
+                this.pauseDialogue(true);
 
                 const interventionDiv = document.createElement('div');
                 interventionDiv.className = 'intervention-prompt';
@@ -1202,15 +1771,15 @@
 
                 this.learnFromDialogue('人間介入', humanMessage);
                 
-                // 次に応答するAIを決定 (最後に発言したAIの相手)
                 const respondingAI = this.currentSpeaker === 'openai' ? 'gemini' : 'openai';
-                const interventionPrompt = this.generateInterventionResponsePrompt(humanMessage, respondingAI, this.conversationHistory);
+                const interventionPrompt = this.entertainmentMode ?
+                    this.generateEntertainmentInterventionPrompt(humanMessage, respondingAI, this.conversationHistory) :
+                    this.generateInterventionResponsePrompt(humanMessage, respondingAI, this.conversationHistory);
                 
-                if (this.isPaused) { // 介入プロンプトなどで一時停止していた場合
+                if (this.isPaused) {
                     this.isPaused = false;
                     this.elements.pauseBtn.textContent = '⏸️ 一時停止';
                     this.addMessage('system', '▶️ 人間介入により対話を再開します...');
-                     // タイマーも再開
                     if(this.isRunning && this.startTime) this.startTimer();
                 }
                 
@@ -1223,12 +1792,33 @@
                 this.elements.humanInput.value = '';
             }
 
+            generateEntertainmentInterventionPrompt(humanInput, respondingAIProviderName, conversationHistory) {
+                const selfName = respondingAIProviderName === 'openai' ? 'ChatGPT' : 'Gemini';
+                const otherName = respondingAIProviderName === 'openai' ? 'Gemini' : 'ChatGPT';
+
+                let storyContext = "\n直近の創作内容:\n";
+                const relevantHistory = conversationHistory.slice(-3);
+                relevantHistory.forEach(entry => {
+                    storyContext += `- ${entry.provider === 'openai' ? 'ChatGPT' : entry.provider === 'gemini' ? 'Gemini' : '人間'}: ${entry.message.substring(0, 100)}...\n`;
+                });
+
+                const prompt =
+                    `あなたは ${selfName} です。\n` +
+                    `現在、${otherName}と「${this.elements.topicInput.value.trim()}」というテーマで${this.getGenreLabel()}を創作中です。\n` +
+                    `${storyContext}\n` +
+                    `ここで読者（人間）から以下の要望・指示がありました：\n「${humanInput}」\n\n` +
+                    `この読者の要望を最優先で反映し、物語をより魅力的に発展させてください。\n` +
+                    `創作スタイル（${this.getLengthGuidance()}、${this.getCreativityGuidance()}）も意識してください。\n` +
+                    `読者の期待に応えつつ、創作パートナーの${otherName}にも刺激を与える内容にしてください。`;
+                return prompt;
+            }
+
             generateInterventionResponsePrompt(humanInput, respondingAIProviderName, conversationHistory) {
                 const selfName = respondingAIProviderName === 'openai' ? 'ChatGPT' : 'Gemini';
                 const otherName = respondingAIProviderName === 'openai' ? 'Gemini' : 'ChatGPT';
 
                 let historySummary = "\n直近の対話の要点:\n";
-                const relevantHistory = conversationHistory.slice(-3); // 人間介入直前の履歴
+                const relevantHistory = conversationHistory.slice(-3);
                 relevantHistory.forEach(entry => {
                     historySummary += `- ${entry.provider === 'openai' ? 'ChatGPT' : entry.provider === 'gemini' ? 'Gemini' : '人間'}: ${entry.message.substring(0, 100)}...\n`;
                 });
@@ -1240,6 +1830,7 @@
                     `ここで人間が以下の介入を行いました：\n「${humanInput}」\n\n` +
                     `この人間の介入を最優先で考慮し、的確に応答してください。あなたの応答は、これまでの議論の流れと人間の指示の両方を踏まえたものであるべきです。\n` +
                     `対話モード（${this.getTargetLabel()}, ${this.getGoalLabel()}）も意識してください。\n` +
+                    `🤝 合意形成を意識し、建設的な対話を心がけてください。\n` +
                     `応答後、議論は${otherName}へと続きます。`;
                 return prompt;
             }
@@ -1256,14 +1847,19 @@
                 const targetAI = lastAIMessageEntry.provider;
                 const messageToDeepen = lastAIMessageEntry.message;
 
-                const deepeningRequestText = `あなたは ${targetAI === 'openai' ? 'ChatGPT' : 'Gemini'} です。\n`+
-                                             `人間が、あなたの直前の発言「${messageToDeepen.substring(0,150)}...」について、より深い探求を求めています。\n` +
-                                             `具体例、根拠、異なる視点からの分析、潜在的な意味合いなど、多角的にその論点を深掘りし、議論に新たな奥行きを与えてください。\n` +
-                                             `あなたの役割（${this.getTargetLabel()}, ${this.getGoalLabel()}）を意識して応答してください。`;
+                const deepeningRequestText = this.entertainmentMode ?
+                    `あなたは ${targetAI === 'openai' ? 'ChatGPT' : 'Gemini'} です。\n`+
+                    `読者が、あなたの直前の創作「${messageToDeepen.substring(0,150)}...」について、より詳細な描写や展開を求めています。\n` +
+                    `キャラクターの心情、情景描写、背景設定など、より深く掘り下げて物語に奥行きを与えてください。\n` +
+                    `${this.getLengthGuidance()}で${this.getCreativityGuidance()}スタイルを維持してください。` :
+                    `あなたは ${targetAI === 'openai' ? 'ChatGPT' : 'Gemini'} です。\n`+
+                    `人間が、あなたの直前の発言「${messageToDeepen.substring(0,150)}...」について、より深い探求を求めています。\n` +
+                    `具体例、根拠、異なる視点からの分析、潜在的な意味合いなど、多角的にその論点を深掘りし、議論に新たな奥行きを与えてください。\n` +
+                    `あなたの役割（${this.getTargetLabel()}, ${this.getGoalLabel()}）を意識して応答してください。`;
 
                 this.addMessage('system', `🔍 **深掘り要求**: ${targetAI.toUpperCase()}に「${messageToDeepen.substring(0,30)}...」の深掘りを依頼`);
                 
-                if (this.isPaused) this.pauseDialogue(); // 再開
+                if (this.isPaused) this.pauseDialogue();
                 this.waitingForIntervention = false; 
                 document.querySelectorAll('.intervention-prompt').forEach(p => p.remove());
 
@@ -1272,7 +1868,7 @@
             }
 
             redirectDialogue() {
-                 if (!this.isRunning) {
+                if (!this.isRunning) {
                     this.showWarning('まず対話を開始してください。'); return;
                 }
                 const redirectionText = this.elements.humanInput.value.trim();
@@ -1284,13 +1880,17 @@
                 this.humanCount++;
                 this.updateStats();
 
-                const respondingAI = this.currentSpeaker === 'openai' ? 'gemini' : 'openai'; // 次の番のAI
-                const redirectionPrompt = `あなたは ${respondingAI === 'openai' ? 'ChatGPT' : 'Gemini'} です。\n` +
-                                          `人間が対話の方向転換を指示しました。新しい指示／トピックは以下の通りです：\n「${redirectionText}」\n\n` +
-                                          `これまでの議論は一旦脇に置き、この新しい指示／トピックに焦点を当てて議論を再開してください。\n`+
-                                          `あなたの役割（${this.getTargetLabel()}, ${this.getGoalLabel()}）を意識して、最初の発言をしてください。`;
+                const respondingAI = this.currentSpeaker === 'openai' ? 'gemini' : 'openai';
+                const redirectionPrompt = this.entertainmentMode ?
+                    `あなたは ${respondingAI === 'openai' ? 'ChatGPT' : 'Gemini'} です。\n` +
+                    `読者が物語の方向転換を要求しました。新しい指示は：\n「${redirectionText}」\n\n` +
+                    `この指示に従って物語を新しい方向に導いてください。${this.getGenreLabel()}の${this.getLengthGuidance()}で、${this.getCreativityGuidance()}スタイルを維持してください。` :
+                    `あなたは ${respondingAI === 'openai' ? 'ChatGPT' : 'Gemini'} です。\n` +
+                    `人間が対話の方向転換を指示しました。新しい指示／トピックは以下の通りです：\n「${redirectionText}」\n\n` +
+                    `これまでの議論は一旦脇に置き、この新しい指示／トピックに焦点を当てて議論を再開してください。\n`+
+                    `あなたの役割（${this.getTargetLabel()}, ${this.getGoalLabel()}）を意識して、最初の発言をしてください。`;
                 
-                if (this.isPaused) this.pauseDialogue(); // 再開
+                if (this.isPaused) this.pauseDialogue();
                 this.waitingForIntervention = false;
                 document.querySelectorAll('.intervention-prompt').forEach(p => p.remove());
 
@@ -1313,13 +1913,21 @@
                 this.elements.humanInput.value = '';
             }
 
+            triggerConsensusCheck() {
+                this.manualConsensusCheck();
+            }
+
             quickIntervention(type) {
                 if (!this.isRunning) { this.showWarning('まず対話を開始してください。'); return; }
                 const quickMessages = {
                     '具体例': '今の議論について、もっと具体的な例を挙げて説明してください。',
                     '反対意見': '今の意見に対して、反対の視点や批判的な意見はありますか？',
                     '実用性': 'そのアイデアや議論は、実用的な観点から見てどうでしょうか？現実的な応用の可能性は？',
-                    '簡潔に': 'ここまでの議論の要点を、もっと簡潔にまとめてもらえますか？'
+                    '簡潔に': 'ここまでの議論の要点を、もっと簡潔にまとめてもらえますか？',
+                    '合意形成': 'これまでの議論で共通の理解や合意できる点はありますか？',
+                    'エンタメ転換': this.entertainmentMode ? 
+                        'もっと劇的で面白い展開にしてください。読者をワクワクさせて！' : 
+                        'この議論をもっと面白く、エンターテイニングに表現してみてください。'
                 };
                 this.elements.humanInput.value = quickMessages[type] || '';
                 this.humanIntervention();
@@ -1329,17 +1937,21 @@
                 if (!this.learningEnabled || provider === 'system' || provider === 'human') return;
 
                 const hasKeywords = this.autoLearnKeywords.some(k => message.includes(k));
-                const isLongEnough = message.length > 150; // ある程度の長さがあるメッセージ
+                const isLongEnough = message.length > 150;
 
                 if (hasKeywords || isLongEnough) {
                     const timestamp = new Date();
                     const learnId = `auto_${provider}_${timestamp.getTime()}`;
                     const importantPart = this.extractImportantPart(message, hasKeywords);
                     
-                    if (importantPart.length > 20) { // 短すぎるものは学習しない
+                    if (importantPart.length > 20) {
                         this.knowledgeBase.set(learnId, {
-                            topic: `${provider}の発言からの洞察 (自動)`, content: importantPart, timestamp,
-                            source: `auto_learn_${provider}`, fullMessage: message 
+                            topic: `${provider}の${this.entertainmentMode ? '創作' : '発言'}からの洞察 (自動)`, 
+                            content: importantPart, 
+                            timestamp,
+                            source: `auto_learn_${provider}`, 
+                            fullMessage: message,
+                            mode: this.entertainmentMode ? 'entertainment' : 'discussion'
                         });
                         this.updateKnowledgeDisplay(); this.updateStats();
                     }
@@ -1347,7 +1959,7 @@
             }
 
             extractImportantPart(message, hasKeywords) {
-                const sentences = message.split(/[。．！？\n]+/).map(s => s.trim()).filter(s => s.length > 10); // 短すぎる文は除外
+                const sentences = message.split(/[。．！？\n]+/).map(s => s.trim()).filter(s => s.length > 10);
                 if (sentences.length === 0) return "";
 
                 let targetSentences = [];
@@ -1355,15 +1967,15 @@
                     targetSentences = sentences.filter(s => this.autoLearnKeywords.some(k => s.includes(k)));
                 }
                 
-                if (targetSentences.length === 0) { // キーワード文がない場合、結論っぽい部分や最初の文
+                if (targetSentences.length === 0) {
                     const concludingKeywords = ['つまり', 'したがって', '結論として', '要するに'];
                     const concludingSentence = sentences.find(s => concludingKeywords.some(k => s.startsWith(k)));
                     if (concludingSentence) targetSentences.push(concludingSentence);
-                    else targetSentences.push(sentences[0]); // 最初の文
-                    if (sentences.length > 1 && !concludingSentence) targetSentences.push(sentences[sentences.length -1]); //最後の文も
+                    else targetSentences.push(sentences[0]);
+                    if (sentences.length > 1 && !concludingSentence) targetSentences.push(sentences[sentences.length -1]);
                 }
 
-                let extracted = targetSentences.slice(0, 2).join('。'); // 最大2文
+                let extracted = targetSentences.slice(0, 2).join('。');
                 if (extracted.length > 200) extracted = extracted.substring(0, 197) + "...";
                 return extracted;
             }
@@ -1371,7 +1983,13 @@
             learnFromDialogue(topic, content) {
                 const timestamp = new Date();
                 const learnId = `event_${topic.replace(/\s+/g, '_')}_${timestamp.getTime()}`;
-                this.knowledgeBase.set(learnId, { topic, content, timestamp, source: 'dialogue_event' });
+                this.knowledgeBase.set(learnId, { 
+                    topic, 
+                    content, 
+                    timestamp, 
+                    source: 'dialogue_event',
+                    mode: this.entertainmentMode ? 'entertainment' : 'discussion'
+                });
                 this.updateKnowledgeDisplay(); this.updateStats();
             }
 
@@ -1386,8 +2004,9 @@
                 items.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'knowledge-item';
+                    const modeIcon = item.mode === 'entertainment' ? '🎭' : '💬';
                     div.innerHTML = `
-                        <div class="knowledge-topic">${item.topic} (${item.source})</div>
+                        <div class="knowledge-topic">${modeIcon} ${item.topic} (${item.source})</div>
                         <div class="knowledge-content" title="${item.content}">${item.content.substring(0,100)}${item.content.length > 100 ? '...' : ''}</div>
                         <div style="font-size:0.8em;color:#999;margin-top:5px;">${item.timestamp.toLocaleString()}</div>`;
                     container.appendChild(div);
@@ -1402,7 +2021,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `crossthink_knowledge_${new Date().toISOString().slice(0,10)}.json`;
+                a.download = `crossthink_v6_knowledge_${new Date().toISOString().slice(0,10)}.json`;
                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 this.addMessage('learning', `📤 学習データ ${data.length}件をエクスポートしました`);
@@ -1449,8 +2068,19 @@
             showLearningStats() {
                 const total = this.knowledgeBase.size;
                 const stats = {};
-                this.knowledgeBase.forEach(item => { stats[item.source] = (stats[item.source] || 0) + 1; });
-                let text = `📊 学習統計: 総アイテム数: ${total}\n\nソース別:\n`;
+                const modeStats = { entertainment: 0, discussion: 0, other: 0 };
+                
+                this.knowledgeBase.forEach(item => { 
+                    stats[item.source] = (stats[item.source] || 0) + 1;
+                    if (item.mode === 'entertainment') modeStats.entertainment++;
+                    else if (item.mode === 'discussion') modeStats.discussion++;
+                    else modeStats.other++;
+                });
+                
+                let text = `📊 学習統計: 総アイテム数: ${total}\n\nモード別:\n`;
+                text += `  🎭 エンタメ: ${modeStats.entertainment}件\n`;
+                text += `  💬 議論: ${modeStats.discussion}件\n`;
+                text += `  📝 その他: ${modeStats.other}件\n\nソース別:\n`;
                 for (const src in stats) text += `  • ${src}: ${stats[src]}件\n`;
                 this.addMessage('learning', text);
             }
@@ -1464,12 +2094,12 @@
                     this.addMessage('system', this.isPaused ? '⏸️ 対話を一時停止しました' : '▶️ 対話を再開します...');
                 }
 
-                if (!this.isPaused && this.isRunning) { // 再開時
-                    this.startTimer(); // タイマー更新を再キック
+                if (!this.isPaused && this.isRunning) {
+                    this.startTimer();
                     if (!this.waitingForIntervention && this.conversationHistory.length > 0) {
                         const lastEntry = this.conversationHistory[this.conversationHistory.length - 1];
-                        if (lastEntry.provider === 'openai' || lastEntry.provider === 'gemini') { // AIの応答で終わっていた場合
-                            setTimeout(() => { // 即時送信を避ける
+                        if (lastEntry.provider === 'openai' || lastEntry.provider === 'gemini') {
+                            setTimeout(() => {
                                 if (this.isRunning && !this.isPaused && this.messageCount < this.maxMessages) {
                                     const nextRespondingAI = lastEntry.provider === 'openai' ? 'gemini' : 'openai';
                                     const resumePrompt = this.generateResumePrompt(lastEntry.message);
@@ -1477,42 +2107,52 @@
                                 }
                             }, 500);
                         }
-                    } else if (this.conversationHistory.length === 0) { // まだ何も発言がない場合で再開
-                        this.startDialogue(); // 実質的に最初から開始
+                    } else if (this.conversationHistory.length === 0) {
+                        this.startDialogue();
                     }
                 }
             }
 
-            generateResumePrompt(lastMessageContent) { // 対話再開時のプロンプト
-                return `対話が一時停止から再開されました。直前の相手の発言は「${lastMessageContent.substring(0,100)}...」でした。この議論を引き継ぎ、あなたの意見を述べてください。`;
+            generateResumePrompt(lastMessageContent) {
+                if (this.entertainmentMode) {
+                    return `物語の創作が一時停止から再開されました。直前の内容は「${lastMessageContent.substring(0,100)}...」でした。この続きを魅力的に展開してください。`;
+                } else {
+                    return `対話が一時停止から再開されました。直前の相手の発言は「${lastMessageContent.substring(0,100)}...」でした。この議論を引き継ぎ、あなたの意見を述べてください。`;
+                }
             }
 
             stopDialogue() {
                 this.isRunning = false;
                 this.isPaused = false;
                 this.waitingForIntervention = false;
+                this.entertainmentMode = false; // エンタメモードもリセット
                 this.elements.startBtn.disabled = false;
                 this.elements.pauseBtn.disabled = true;
                 this.elements.pauseBtn.textContent = '⏸️ 一時停止';
                 this.elements.stopBtn.disabled = true;
                 
                 const finalStatsSummary = this.generateFinalStats();
+                const sessionType = this.entertainmentMode ? 'エンタメセッション' : '対話セッション';
+                
                 this.addMessage('system', 
-                    `🛑 対話終了\n\n` +
+                    `🛑 ${sessionType}終了\n\n` +
                     `📊 最終統計:\n` +
                     `• 総メッセージ数 (AI+人間): ${this.messageCount}\n` +
-                    `• ChatGPT発言: ${this.openaiCount}回\n` +
-                    `• Gemini発言: ${this.geminiCount}回\n` +
+                    `• ChatGPT応答: ${this.openaiCount}回\n` +
+                    `• Gemini応答: ${this.geminiCount}回\n` +
                     `• 人間介入: ${this.humanCount}回\n` +
+                    `• 合意形成回数: ${this.consensusCount}回\n` +
+                    `• エンタメセッション数: ${this.entertainmentSessions}回\n` +
                     `• 学習アイテム総数: ${this.knowledgeBase.size}件\n` +
-                    `• 対話時間: ${this.startTime ? Math.floor((Date.now() - this.startTime) / 1000) : 0}秒\n\n` +
-                    `🧠 学習データは「学習機能」タブで確認・管理できます。`
+                    `• セッション時間: ${this.startTime ? Math.floor((Date.now() - this.startTime) / 1000) : 0}秒\n\n` +
+                    `🧠 学習データは「学習機能」タブで確認・管理できます。\n` +
+                    `🎭 新しいエンタメセッションは「エンタメモード」タブから開始できます。`
                 );
-                this.learnFromDialogue('対話終了', `対話終了。${finalStatsSummary}`);
+                this.learnFromDialogue('セッション終了', `${sessionType}終了。${finalStatsSummary}`);
             }
 
             generateFinalStats() {
-                return `総メッセージ: ${this.messageCount}, ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount}, 人間: ${this.humanCount}, 学習アイテム: ${this.knowledgeBase.size}`;
+                return `総メッセージ: ${this.messageCount}, ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount}, 人間: ${this.humanCount}, 合意: ${this.consensusCount}, エンタメ: ${this.entertainmentSessions}, 学習: ${this.knowledgeBase.size}`;
             }
 
             async callOpenAI(prompt) {
@@ -1523,7 +2163,7 @@
                         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             model: 'gpt-3.5-turbo', messages: [{ role: 'user', content: prompt }],
-                            max_tokens: 1500, temperature: 0.7, top_p: 0.9
+                            max_tokens: 1500, temperature: this.entertainmentMode ? 0.8 : 0.7, top_p: 0.9
                         })
                     });
                     if (!response.ok) {
@@ -1535,7 +2175,7 @@
                 } catch (error) {
                     console.error("OpenAI API Error:", error);
                     this.showError(`OpenAI APIエラー: ${error.message}`);
-                    return this.generateFallbackResponse(prompt, `OpenAI: ${error.message}`); // エラー時もフォールバックを返す
+                    return this.generateFallbackResponse(prompt, `OpenAI: ${error.message}`);
                 }
             }
 
@@ -1548,16 +2188,20 @@
                             method: 'POST', headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 contents: [{ parts: [{ text: prompt }] }],
-                                generationConfig: { maxOutputTokens: 1500, temperature: 0.6, topP: 0.8 }
+                                generationConfig: { 
+                                    maxOutputTokens: 1500, 
+                                    temperature: this.entertainmentMode ? 0.7 : 0.6, 
+                                    topP: 0.8 
+                                }
                             })
                         });
                         if (response.ok) {
                             const data = await response.json();
                             return data.candidates?.[0]?.content?.parts?.[0]?.text || `Gemini (${model}) からの応答が空か不正です。`;
                         }
-                        if (response.status === 429) { // Rate limit
+                        if (response.status === 429) {
                              this.showWarning(`Gemini API (${model}) の利用上限に達した可能性があります。`);
-                             continue; // 次のモデルへ
+                             continue;
                         }
                         const errData = await response.json().catch(()=>({}));
                         console.warn(`Gemini API (${model}) Error ${response.status}: ${errData.error?.message || response.statusText}`);
@@ -1578,7 +2222,13 @@
                 if (this.conversationHistory.length === 0) {
                     this.showError('要約対象の対話ログがありません。'); return;
                 }
-                let log = `トピック: 「${topic}」\n対話モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}\n\n`;
+                
+                const sessionType = this.entertainmentMode ? 'エンタメセッション' : '対話セッション';
+                const modeInfo = this.entertainmentMode ? 
+                    `エンタメモード: ${this.getGenreLabel()}, 長さ: ${this.getContentLengthLabel()}, 創造性: ${this.getCreativityLabel()}` :
+                    `対話モード: ${this.getTargetLabel()} × ${this.getGoalLabel()}`;
+                
+                let log = `トピック: 「${topic}」\n${sessionType}: ${modeInfo}\n\n`;
                 this.conversationHistory.forEach(e => {
                     log += `${e.provider === 'openai' ? 'ChatGPT' : e.provider === 'gemini' ? 'Gemini' : '人間'}:\n${e.message}\n\n`;
                 });
@@ -1586,29 +2236,38 @@
                 let knowledgeSummary = "\n--- 学習された主な洞察 ---\n";
                 Array.from(this.knowledgeBase.values())
                     .filter(item => item.source !== 'system_init' && item.source !== 'dialogue_event')
-                    .slice(0, 5) // 最新5件程度
+                    .slice(0, 5)
                     .forEach(item => {
                         knowledgeSummary += `[${item.topic} (${item.source})]: ${item.content.substring(0,150)}...\n`;
                     });
 
-                const prompt = `以下の Crossthink v5.0 でのAI対話セッションのログを分析し、包括的なレポートを作成してください。\n\n` +
+                const analysisType = this.entertainmentMode ? '創作分析' : '対話分析';
+                const prompt = `以下の Crossthink v6.0 での${sessionType}ログを分析し、包括的なレポートを作成してください。\n\n` +
                                `【セッション情報】\n` +
                                `- 総AIメッセージ数: ${this.openaiCount + this.geminiCount} (ChatGPT: ${this.openaiCount}, Gemini: ${this.geminiCount})\n` +
                                `- 人間介入回数: ${this.humanCount}\n` +
+                               `- 合意形成回数: ${this.consensusCount}\n` +
                                `- 学習アイテム数: ${this.knowledgeBase.size}\n` +
                                log + knowledgeSummary +
-                               `\n【レポート作成指示】\n` +
-                               `1. 対話全体の要約と主要な論点の変遷。\n` +
-                               `2. ChatGPTとGeminiの貢献、議論スタイル、特徴的な意見の比較。\n` +
-                               `3. 人間介入が議論に与えた影響（方向転換、深掘り、補足など）。\n` +
-                               `4. 自動学習された洞察の質と、対話内容からの価値抽出の評価。\n` +
-                               `5. この対話セッションから得られた最終的な結論や重要な発見。\n` +
-                               `6. Crossthink v5.0のようなシステムの強み、弱み、今後の改善提案。\n\n` +
-                               `レポートは構造化され、具体的で分析的であること。文字数は4000字以上を目安とする。`;
+                               `\n【${analysisType}レポート作成指示】\n` +
+                               (this.entertainmentMode ? 
+                                `1. 創作全体のあらすじと物語の展開分析。\n` +
+                                `2. ChatGPTとGeminiの創作スタイル、想像力、特徴的な表現の比較。\n` +
+                                `3. 人間介入が物語に与えた影響（方向転換、深掘り、創作指導など）。\n` +
+                                `4. 自動学習された創作要素の質と、エンタメ価値の評価。\n` +
+                                `5. この創作セッションから生まれた最終的な作品や重要な創作アイデア。\n` +
+                                `6. エンタメ特化AIシステムの強み、弱み、今後の改善提案。\n` :
+                                `1. 対話全体の要約と主要な論点の変遷。\n` +
+                                `2. ChatGPTとGeminiの貢献、議論スタイル、特徴的な意見の比較。\n` +
+                                `3. 人間介入が議論に与えた影響（方向転換、深掘り、補足など）。\n` +
+                                `4. 合意形成プロセスの分析と、AIの合意検出精度の評価。\n` +
+                                `5. この対話セッションから得られた最終的な結論や重要な発見。\n` +
+                                `6. 合意形成機能付きAIシステムの強み、弱み、今後の改善提案。\n`) +
+                               `\nレポートは構造化され、具体的で分析的であること。文字数は4000字以上を目安とする。`;
 
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(prompt).then(() => {
-                        this.addMessage('system', `📋 要約生成用プロンプト (約${prompt.length}字) をコピーしました。\n高性能LLMに貼り付けてレポートを生成してください。`);
+                        this.addMessage('system', `📋 ${analysisType}レポート生成用プロンプト (約${prompt.length}字) をコピーしました。\n高性能LLMに貼り付けてレポートを生成してください。`);
                     }).catch(err => { console.error('Clipboard copy failed:', err); this.showPromptWindow(prompt); });
                 } else { this.showPromptWindow(prompt); }
             }
@@ -1616,7 +2275,7 @@
             showPromptWindow(promptText) {
                 const win = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
                 if (win) {
-                    win.document.write('<html><head><title>要約プロンプト</title><style>body{font-family:sans-serif;padding:1em;}textarea{width:98%;height:85vh;padding:0.5em;font-family:monospace;white-space:pre-wrap;}</style></head><body><h2>要約生成用プロンプト</h2><p>以下のプロンプトをコピーして、高性能LLMに貼り付けてください。</p><textarea readonly>${promptText.replace(/</g, "&lt;")}</textarea></body></html>');
+                    win.document.write('<html><head><title>分析レポートプロンプト</title><style>body{font-family:sans-serif;padding:1em;}textarea{width:98%;height:85vh;padding:0.5em;font-family:monospace;white-space:pre-wrap;}</style></head><body><h2>分析レポート生成用プロンプト</h2><p>以下のプロンプトをコピーして、高性能LLMに貼り付けてください。</p><textarea readonly>${promptText.replace(/</g, "&lt;")}</textarea></body></html>');
                     win.document.close();
                 } else { this.showWarning('ポップアップがブロックされました。コンソールにプロンプトを出力します。'); console.log(promptText); }
             }
@@ -1628,11 +2287,22 @@
                 let name, emoji, role = '';
 
                 switch(provider) {
-                    case 'openai': name='ChatGPT'; emoji='🟢'; role=` (${this.targetMode})`; this.currentSpeaker='openai'; break;
-                    case 'gemini': name='Gemini'; emoji='🔷'; role=` (${this.targetMode})`; this.currentSpeaker='gemini'; break;
+                    case 'openai': 
+                        name='ChatGPT'; 
+                        emoji='🟢'; 
+                        role=` (${this.entertainmentMode ? this.getGenreLabel() : this.targetMode})`; 
+                        this.currentSpeaker='openai'; 
+                        break;
+                    case 'gemini': 
+                        name='Gemini'; 
+                        emoji='🔷'; 
+                        role=` (${this.entertainmentMode ? this.getGenreLabel() : this.targetMode})`; 
+                        this.currentSpeaker='gemini'; 
+                        break;
                     case 'human': name='あなた'; emoji='👤'; break;
                     case 'learning': name='学習システム'; emoji='🧠'; break;
-                    default: name='Crossthink v5.0'; emoji='🚀';
+                    case 'consensus': name='合意検出システム'; emoji='🤝'; break;
+                    default: name='Crossthink v6.0'; emoji='🚀';
                 }
                 msgDiv.innerHTML = `<div class="message-header">${emoji} ${name}${role}<span class="message-time">${time}</span></div>` +
                                    `<div class="${isThinking ? 'thinking' : ''}">${content.replace(/\n/g, '<br>')}</div>`;
@@ -1641,8 +2311,6 @@
 
                 if (!isThinking && (provider === 'openai' || provider === 'gemini' || provider === 'human')) {
                     this.messageCount++;
-                    // APIコール数のカウントは sendMessage 内で行う
-                    // this.updateStats(); // sendMessage の finally でまとめて更新
                 }
             }
 
@@ -1655,6 +2323,7 @@
                 this.elements.chatContainer.innerHTML = '';
                 this.messageCount = 0; this.openaiCount = 0; this.geminiCount = 0; this.humanCount = 0;
                 this.conversationHistory = []; this.startTime = null;
+                this.entertainmentMode = false; // エンタメモードもリセット
                 this.elements.elapsed.textContent = '0';
                 this.elements.startBtn.disabled = false;
                 this.elements.pauseBtn.disabled = true; this.elements.pauseBtn.textContent = '⏸️ 一時停止';
@@ -1685,19 +2354,20 @@
                 this.elements.geminiMessages.textContent = this.geminiCount;
                 this.elements.humanMessages.textContent = this.humanCount;
                 this.elements.learningItems.textContent = this.knowledgeBase.size;
+                this.elements.consensusCount.textContent = this.consensusCount;
+                this.elements.entertainmentSessions.textContent = this.entertainmentSessions;
             }
 
             startTimer() {
-                if (!this.isRunning || !this.startTime) return; // 開始時のみ設定
+                if (!this.isRunning || !this.startTime) return;
                 
                 const timerTick = () => {
                     if (this.isRunning && !this.isPaused && this.startTime) {
                         this.elements.elapsed.textContent = Math.floor((Date.now() - this.startTime) / 1000);
                         setTimeout(timerTick, 1000);
-                    } else if (this.isRunning && this.isPaused) { // 一時停止中もタイマーは呼び出し続けるが、表示は更新しない
+                    } else if (this.isRunning && this.isPaused) {
                         setTimeout(timerTick, 1000);
                     }
-                    // isRunningがfalseになったらタイマーは停止
                 };
                 timerTick();
             }
@@ -1706,13 +2376,56 @@
                 const labels = {'practical':'🏠 実用的','business':'💼 ビジネス','philosophical':'🧠 哲学的'};
                 return labels[this.targetMode] || this.targetMode;
             }
+            
             getGoalLabel() {
                 const labels = {'ideation':'💡 案出し','consensus':'🤝 合意形成','exploration':'🔍 探索'};
                 return labels[this.goalMode] || this.goalMode;
             }
+            
             getInterventionLabel() {
                 const labels = ['なし','稀','少','中','多','頻繁','非常に頻繁','常時','リアルタイム','シンクロ','フル介入'];
                 return labels[this.interventionFrequency] || '中程度';
+            }
+
+            getConsensusThresholdLabel() {
+                const labels = ['厳格','やや厳格','標準','やや寛容','寛容'];
+                return labels[this.consensusThreshold - 1] || '標準';
+            }
+
+            getGenreLabel() {
+                const labels = {
+                    'novel': '📚 小説',
+                    'dialogue': '💬 ドラマ対話',
+                    'comedy': '😄 コメディ',
+                    'mystery': '🔍 ミステリー',
+                    'scifi': '🚀 SF',
+                    'fantasy': '🧙 ファンタジー',
+                    'romance': '💕 ロマンス',
+                    'adventure': '⚔️ アドベンチャー'
+                };
+                return labels[this.currentGenre] || '📚 小説';
+            }
+
+            getContentLengthLabel() {
+                const labels = ['短編','やや短編','中編','やや長編','長編'];
+                return labels[this.contentLength - 1] || '中編';
+            }
+
+            getCreativityLabel() {
+                const labels = ['リアル','やや現実的','バランス','やや幻想的','ファンタジー'];
+                return labels[this.creativityLevel - 1] || 'バランス';
+            }
+
+            getEntertainmentTypeLabel() {
+                const labels = {
+                    'collaborative_story': '📚 協力小説創作',
+                    'character_dialogue': '🎭 キャラクター対話',
+                    'world_building': '🌍 世界観構築',
+                    'story_battle': '⚔️ ストーリーバトル',
+                    'improvisation': '🎪 即興劇場',
+                    'riddle_game': '🧩 謎解きゲーム'
+                };
+                return labels[this.entertainmentType] || '🎭 自由創作';
             }
         }
 
@@ -1721,6 +2434,7 @@
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             const activeBtn = Array.from(document.querySelectorAll('.tab-button')).find(b => {
                 if (tabName === 'autonomous' && b.textContent.includes('AI自律対話')) return true;
+                if (tabName === 'entertainment' && b.textContent.includes('エンタメモード')) return true;
                 if (tabName === 'intervention' && b.textContent.includes('人間介入モード')) return true;
                 if (tabName === 'learning' && b.textContent.includes('学習機能')) return true;
                 return false;
@@ -1735,9 +2449,8 @@
             if (window.crossthinkSystem) {
                 window.crossthinkSystem.waitingForIntervention = false;
                 document.querySelectorAll('.intervention-prompt').forEach(p => p.remove());
-                // pauseDialogue は isPaused をトグルするので、現在の isPaused が true (停止中) なら再開される
                 if (window.crossthinkSystem.isPaused) {
-                     window.crossthinkSystem.pauseDialogue(true); // システムによる再開
+                     window.crossthinkSystem.pauseDialogue(true);
                 }
             }
         }
@@ -1747,9 +2460,6 @@
             if(btn) btn.click(); else switchTab('intervention');
             if (window.crossthinkSystem) {
                  window.crossthinkSystem.elements.humanInput.focus();
-                 if (window.crossthinkSystem.isPaused && window.crossthinkSystem.waitingForIntervention){
-                     // 何もしないか、ユーザーに介入を促すメッセージを出す (介入タブへの切り替え自体がアクション)
-                 }
             }
         }
 
@@ -1757,7 +2467,9 @@
         function requestDeepening() { if(window.crossthinkSystem) window.crossthinkSystem.requestDeepening(); }
         function redirectDialogue() { if(window.crossthinkSystem) window.crossthinkSystem.redirectDialogue(); }
         function saveInsight() { if(window.crossthinkSystem) window.crossthinkSystem.saveInsight(); }
+        function triggerConsensusCheck() { if(window.crossthinkSystem) window.crossthinkSystem.triggerConsensusCheck(); }
         function quickIntervention(type) { if(window.crossthinkSystem) window.crossthinkSystem.quickIntervention(type); }
+        function startEntertainmentMode(type) { if(window.crossthinkSystem) window.crossthinkSystem.startEntertainmentMode(type); }
         function exportKnowledge() { if(window.crossthinkSystem) window.crossthinkSystem.exportKnowledge(); }
         function importKnowledge() { if(window.crossthinkSystem) window.crossthinkSystem.importKnowledge(); }
         function clearKnowledge() { if(window.crossthinkSystem) window.crossthinkSystem.clearKnowledge(); }
@@ -1765,8 +2477,8 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             try {
-                window.crossthinkSystem = new CrossthinkAdvanced();
-                console.log('Crossthink v5.0 Initialized');
+                window.crossthinkSystem = new CrossthinkEnhanced();
+                console.log('Crossthink v6.0 Enhanced Edition Initialized');
             } catch (e) {
                 console.error('Initialization failed:', e);
                 alert('System init failed. Check console.');
@@ -1777,6 +2489,7 @@
             console.error('Global Error:', e.message, e.filename, e.lineno, e.colno, e.error);
             if(window.crossthinkSystem?.showError) window.crossthinkSystem.showError(`Unhandled: ${e.message}`);
         });
+        
         window.addEventListener('unhandledrejection', e => {
             console.error('Unhandled Promise Rejection:', e.reason);
             if(window.crossthinkSystem?.showWarning) window.crossthinkSystem.showWarning(`Async error: ${e.reason?.message || e.reason}`);
