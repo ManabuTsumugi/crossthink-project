@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crossthink Demo3p - AI3者対話体験</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .beta-label {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: inline-block;
+        }
+
+        .start-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .start-section.hidden {
+            display: none;
+        }
+
+        .topic-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .topic-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-height: 500px;
+            display: none;
+        }
+
+        .chat-container.active {
+            display: block;
+        }
+
+        .participants-indicator {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .participant {
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .participant.speaking {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+        }
+
+        .participant-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .participant-name {
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .participant-role {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 15px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-chatgpt {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-left: 4px solid #4caf50;
+        }
+
+        .message-gemini {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 4px solid #2196f3;
+        }
+
+        .message-human {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left: 4px solid #ff9800;
+        }
+
+        .message-system {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-left: 4px solid #9c27b0;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .message-time {
+            margin-left: auto;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        .human-input-section {
+            background: #fffbf0;
+            border: 2px dashed #ff9800;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .human-input-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .ai-question {
+            font-weight: bold;
+            color: #e65100;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .response-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .option-btn {
+            padding: 8px 16px;
+            background: #fff;
+            border: 2px solid #ff9800;
+            color: #e65100;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .option-btn:hover, .option-btn.selected {
+            background: #ff9800;
+            color: white;
+        }
+
+        .human-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 2px solid #ff9800;
+            border-radius: 10px;
+            resize: vertical;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .human-textarea:focus {
+            outline: none;
+            border-color: #e65100;
+        }
+
+        .submit-response-btn {
+            background: linear-gradient(135deg, #ff9800 0%, #e65100 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+
+        .submit-response-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .thinking {
+            font-style: italic;
+            opacity: 0.8;
+            color: #666;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .usage-info {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .progress-indicator {
+            background: rgba(255,255,255,0.2);
+            height: 4px;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .end-session-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .participants-indicator {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .participant {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .participant-icon {
+                font-size: 1.5em;
+            }
+            
+            .response-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌟 Crossthink Demo3p</h1>
+            <p>ChatGPT・Gemini・あなたの3者対話体験</p>
+            <div class="beta-label">🚀 ベータ版</div>
+        </div>
+
+        <div class="usage-info">
+            🎯 1日8回まで体験可能 | 💬 1セッション20往復まで | 🤖 AIがあなたに質問します
+        </div>
+
+        <div class="progress-indicator">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="startSection" class="start-section">
+            <h2 style="margin-bottom: 15px; text-align: center;">💭 何について話し合いたいですか？</h2>
+            <input type="text" id="topicInput" class="topic-input" 
+                   placeholder="例：AI時代における人間の創造性とは何か？" 
+                   value="AI時代における人間の創造性とは何か？">
+            <button id="startBtn" class="start-btn">🚀 3者対話を開始</button>
+            <p style="text-align: center; margin-top: 15px; color: #666; font-size: 0.9em;">
+                AIが議論を始め、途中であなたに質問します
+            </p>
+        </div>
+
+        <div id="chatContainer" class="chat-container">
+            <div class="participants-indicator">
+                <div id="participantChatGPT" class="participant">
+                    <div class="participant-icon">🟢</div>
+                    <div>
+                        <div class="participant-name">ChatGPT</div>
+                        <div class="participant-role">探索者</div>
+                    </div>
+                </div>
+                <div id="participantHuman" class="participant">
+                    <div class="participant-icon">👤</div>
+                    <div>
+                        <div class="participant-name">あなた</div>
+                        <div class="participant-role">体験者</div>
+                    </div>
+                </div>
+                <div id="participantGemini" class="participant">
+                    <div class="participant-icon">🔷</div>
+                    <div>
+                        <div class="participant-name">Gemini</div>
+                        <div class="participant-role">統合者</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="messages" class="messages"></div>
+
+            <div id="humanInputSection" class="human-input-section">
+                <div id="aiQuestion" class="ai-question"></div>
+                <div id="responseOptions" class="response-options"></div>
+                <textarea id="humanTextarea" class="human-textarea" 
+                         placeholder="あなたの考えや体験を自由に入力してください..."></textarea>
+                <button id="submitResponseBtn" class="submit-response-btn">💬 回答を送信</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="endSessionBtn" class="end-session-btn">🏁 対話を終了</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class CrossthinkDemo3p {
+            constructor() {
+                this.sessionId = this.generateSessionId();
+                this.participantHash = this.generateParticipantHash();
+                this.messageCount = 0;
+                this.maxMessages = 20;
+                this.conversationHistory = [];
+                this.currentTopic = '';
+                this.waitingForHuman = false;
+                
+                // API配置
+                this.OPENAI_API_KEY = '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';
+                this.GEMINI_API_KEY = 'AIzaSyCka3_4TRfyGT9-9pNcQukDn3RJ9WTqo3Q';
+                
+                this.initializeElements();
+                this.bindEvents();
+            }
+
+            generateSessionId() {
+                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            generateParticipantHash() {
+                return 'participant_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            initializeElements() {
+                this.elements = {
+                    startSection: document.getElementById('startSection'),
+                    chatContainer: document.getElementById('chatContainer'),
+                    topicInput: document.getElementById('topicInput'),
+                    startBtn: document.getElementById('startBtn'),
+                    messages: document.getElementById('messages'),
+                    humanInputSection: document.getElementById('humanInputSection'),
+                    aiQuestion: document.getElementById('aiQuestion'),
+                    responseOptions: document.getElementById('responseOptions'),
+                    humanTextarea: document.getElementById('humanTextarea'),
+                    submitResponseBtn: document.getElementById('submitResponseBtn'),
+                    endSessionBtn: document.getElementById('endSessionBtn'),
+                    progressBar: document.getElementById('progressBar'),
+                    participantChatGPT: document.getElementById('participantChatGPT'),
+                    participantGemini: document.getElementById('participantGemini'),
+                    participantHuman: document.getElementById('participantHuman')
+                };
+            }
+
+            bindEvents() {
+                this.elements.startBtn.addEventListener('click', () => this.startDialogue());
+                this.elements.submitResponseBtn.addEventListener('click', () => this.submitHumanResponse());
+                this.elements.endSessionBtn.addEventListener('click', () => this.endSession());
+                
+                this.elements.humanTextarea.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault();
+                        this.submitHumanResponse();
+                    }
+                });
+            }
+
+            async startDialogue() {
+                const topic = this.elements.topicInput.value.trim();
+                if (!topic) {
+                    alert('トピックを入力してください');
+                    return;
+                }
+
+                this.currentTopic = topic;
+                this.elements.startSection.classList.add('hidden');
+                this.elements.chatContainer.classList.add('active');
+
+                this.addMessage('system', `🚀 3者対話開始: "${topic}"`);
+                this.addMessage('system', 'ChatGPTとGeminiが議論を始めます...');
+
+                await this.sendToCrossthinkCore();
+                await this.startAIDialogue();
+            }
+
+            async sendToCrossthinkCore() {
+                // crossthinkCore への初期データ送信
+                const data = {
+                    session_id: this.sessionId,
+                    participant_hash: this.participantHash,
+                    topic: this.currentTopic,
+                    messages: [],
+                    participant_context: {
+                        location: 'unknown',
+                        age_range: 'unknown',
+                        position_level: null,
+                        input_ui: 'web'
+                    }
+                };
+
+                try {
+                    const response = await fetch('/api/core/entry/submit', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (!response.ok) {
+                        console.warn('crossthinkCore連携警告:', response.status, response.statusText);
+                    }
+                } catch (error) {
+                    console.warn('crossthinkCore連携エラー:', error.message);
+                    // エラーでも対話は続行
+                }
+            }
+
+            async startAIDialogue() {
+                // ChatGPTから開始
+                await this.callChatGPT(this.generateInitialPrompt());
+            }
+
+            generateInitialPrompt() {
+                return `あなたはChatGPT（探索者役）として、「${this.currentTopic}」について議論を開始してください。
+
+重要な指示:
+- Geminiと議論しつつ、適切なタイミングで人間に質問を投げかけてください
+- 人間には体験談や価値観について聞いてください
+- 簡潔で分かりやすく応答してください
+- 3-4回の交換後に人間に質問することを意識してください
+
+最初の発言として、このトピックについてあなたの見解を述べてください。`;
+            }
+
+            async callChatGPT(prompt, isHumanFollowUp = false) {
+                this.setParticipantSpeaking('chatgpt');
+                this.addMessage('chatgpt', 'thinking', true);
+
+                try {
+                    // CORS回避のため、サーバーサイドプロキシを使用する場合の準備
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.OPENAI_API_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-3.5-turbo',
+                            messages: [{ role: 'user', content: prompt }],
+                            max_tokens: 300,
+                            temperature: 0.7
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(`ChatGPT API Error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    const content = data.choices?.[0]?.message?.content || 'レスポンスの解析に失敗しました。';
+
+                    this.removeThinkingMessage();
+                    this.addMessage('chatgpt', content);
+                    this.conversationHistory.push({ speaker: 'chatgpt', content, timestamp: new Date() });
+
+                    // 人間への質問タイミングをチェック
+                    if (this.shouldAskHuman(content)) {
+                        this.triggerHumanQuestion(content);
+                    } else if (!isHumanFollowUp && this.messageCount < this.maxMessages) {
+                        setTimeout(() => this.callGemini(this.generateGeminiPrompt(content)), 2000);
+                    }
+
+                } catch (error) {
+                    this.removeThinkingMessage();
+                    this.addMessage('system', `ChatGPT API エラー: ${error.message}`);
+                }
+
+                this.clearParticipantSpeaking();
+            }
+
+            shouldAskHuman(content) {
+                const questionTriggers = [
+                    'どう思いますか',
+                    '経験はありますか',
+                    'あなたは',
+                    '実際に',
+                    'どちらが',
+                    '感じたこと'
+                ];
+                
+                return questionTriggers.some(trigger => content.includes(trigger)) ||
+                       (this.conversationHistory.length >= 4 && Math.random() < 0.7);
+            }
+
+            triggerHumanQuestion(aiMessage) {
+                this.waitingForHuman = true;
+                
+                const question = this.extractOrGenerateQuestion(aiMessage);
+                this.elements.aiQuestion.textContent = question;
+                
+                const options = this.generateResponseOptions(question);
+                this.elements.responseOptions.innerHTML = '';
+                options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = option;
+                    btn.onclick = () => this.selectOption(btn, option);
+                    this.elements.responseOptions.appendChild(btn);
+                });
+
+                this.elements.humanInputSection.classList.add('active');
+                this.setParticipantSpeaking('human');
+            }
+
+            extractOrGenerateQuestion(aiMessage) {
+                if (aiMessage.includes('?') || aiMessage.includes('？')) {
+                    const sentences = aiMessage.split(/[。？?]/).filter(s => s.trim());
+                    const questionSentence = sentences.find(s => s.includes('どう') || s.includes('あなた'));
+                    if (questionSentence) return questionSentence.trim() + '？';
+                }
+                
+                return 'この点について、あなたの経験や考えをお聞かせください。';
+            }
+
+            generateResponseOptions(question) {
+                const optionSets = {
+                    default: ['同感です', '違う視点では', '経験から言うと', '具体例では'],
+                    experience: ['経験あります', '似た状況で', '実際には', 'わからない'],
+                    opinion: ['賛成', '部分的に賛成', '反対', '分からない']
+                };
+
+                if (question.includes('経験')) return optionSets.experience;
+                if (question.includes('どう思') || question.includes('意見')) return optionSets.opinion;
+                return optionSets.default;
+            }
+
+            selectOption(btn, option) {
+                document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                this.elements.humanTextarea.value = option + ' ';
+                this.elements.humanTextarea.focus();
+            }
+
+            async submitHumanResponse() {
+                const response = this.elements.humanTextarea.value.trim();
+                if (!response) {
+                    alert('回答を入力してください');
+                    return;
+                }
+
+                this.addMessage('human', response);
+                this.conversationHistory.push({ 
+                    speaker: 'human', 
+                    content: response, 
+                    timestamp: new Date(),
+                    context: { ai_question_triggered: true }
+                });
+
+                this.elements.humanInputSection.classList.remove('active');
+                this.elements.humanTextarea.value = '';
+                this.clearParticipantSpeaking();
+                this.waitingForHuman = false;
+
+                await this.sendToCore();
+
+                if (this.messageCount < this.maxMessages) {
+                    setTimeout(() => this.callGemini(this.generateGeminiResponsePrompt(response)), 1500);
+                }
+            }
+
+            async callGemini(prompt) {
+                this.setParticipantSpeaking('gemini');
+                this.addMessage('gemini', 'thinking', true);
+
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: {
+                                maxOutputTokens: 300,
+                                temperature: 0.6
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Gemini API Error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const content = data.candidates[0].content.parts[0].text;
+
+                    this.removeThinkingMessage();
+                    this.addMessage('gemini', content);
+                    this.conversationHistory.push({ speaker: 'gemini', content, timestamp: new Date() });
+
+                    if (this.messageCount < this.maxMessages) {
+                        setTimeout(() => this.callChatGPT(this.generateChatGPTResponsePrompt(content)), 2000);
+                    }
+
+                } catch (error) {
+                    this.removeThinkingMessage();
+                    this.addMessage('system', `Gemini API エラー: ${error.message}`);
+                }
+
+                this.clearParticipantSpeaking();
+            }
+
+            generateGeminiPrompt(chatgptMessage) {
+                return `あなたはGemini（統合者役）として、ChatGPTの発言「${chatgptMessage}」に対して応答してください。
+
+- 異なる視点や補完的な意見を提示してください
+- 簡潔で建設的な議論を心がけてください
+- トピック「${this.currentTopic}」に関連させてください`;
+            }
+
+            generateGeminiResponsePrompt(humanResponse) {
+                return `人間が「${humanResponse}」と回答しました。
+
+これを受けて、あなたはGeminiとして：
+- 人間の体験や意見を踏まえた応答をしてください
+- 新たな視点や質問を提示してください
+- トピック「${this.currentTopic}」についての議論を深めてください`;
+            }
+
+            generateChatGPTResponsePrompt(geminiMessage) {
+                return `Geminiが「${geminiMessage}」と発言しました。
+
+あなたはChatGPT（探索者役）として：
+- Geminiの意見に対して応答してください
+- 必要に応じて人間に質問を投げかけてください
+- 議論を建設的に発展させてください`;
+            }
+
+            async sendToCore() {
+                const data = {
+                    session_id: this.sessionId,
+                    participant_hash: this.participantHash,
+                    topic: this.currentTopic,
+                    messages: this.conversationHistory
+                };
+
+                try {
+                    await fetch('/api/core/entry/submit', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                } catch (error) {
+                    console.warn('crossthinkCore連携エラー:', error);
+                }
+            }
+
+            addMessage(speaker, content, isThinking = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message message-${speaker}${isThinking ? ' thinking' : ''}`;
+                
+                const time = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'});
+                
+                let speakerName = speaker;
+                let emoji = '';
+                switch(speaker) {
+                    case 'chatgpt': speakerName = 'ChatGPT'; emoji = '🟢'; break;
+                    case 'gemini': speakerName = 'Gemini'; emoji = '🔷'; break;
+                    case 'human': speakerName = 'あなた'; emoji = '👤'; break;
+                    case 'system': speakerName = 'システム'; emoji = '🚀'; break;
+                }
+
+                if (isThinking) {
+                    messageDiv.innerHTML = `<div class="thinking">${emoji} ${speakerName} が考えています...</div>`;
+                    messageDiv.id = 'thinking-message';
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="message-header">
+                            ${emoji} ${speakerName}
+                            <span class="message-time">${time}</span>
+                        </div>
+                        <div>${content}</div>
+                    `;
+                    if (speaker !== 'system') this.messageCount++;
+                }
+
+                this.elements.messages.appendChild(messageDiv);
+                this.elements.messages.scrollTop = this.elements.messages.scrollHeight;
+                
+                this.updateProgress();
+            }
+
+            removeThinkingMessage() {
+                const thinkingMsg = document.getElementById('thinking-message');
+                if (thinkingMsg) thinkingMsg.remove();
+            }
+
+            setParticipantSpeaking(speaker) {
+                this.clearParticipantSpeaking();
+                const participantId = `participant${speaker.charAt(0).toUpperCase() + speaker.slice(1)}`;
+                const element = document.getElementById(participantId);
+                if (element) element.classList.add('speaking');
+            }
+
+            clearParticipantSpeaking() {
+                document.querySelectorAll('.participant').forEach(p => p.classList.remove('speaking'));
+            }
+
+            updateProgress() {
+                const progress = (this.messageCount / this.maxMessages) * 100;
+                this.elements.progressBar.style.width = `${Math.min(progress, 100)}%`;
+                
+                if (this.messageCount >= this.maxMessages) {
+                    setTimeout(() => this.endSession(), 2000);
+                }
+            }
+
+            endSession() {
+                this.addMessage('system', '🏁 対話セッションが終了しました。ご参加ありがとうございました！');
+                this.elements.humanInputSection.classList.remove('active');
+                this.clearParticipantSpeaking();
+                
+                setTimeout(() => {
+                    if (confirm('新しい対話を始めますか？')) {
+                        location.reload();
+                    }
+                }, 2000);
+            }
+        }
+
+        // アプリケーション初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            new CrossthinkDemo3p();
+        });
+    </script>
+</body>
+</html>
